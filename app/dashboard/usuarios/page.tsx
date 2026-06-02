@@ -1,17 +1,11 @@
 "use client";
 
 import React from 'react'
-import { useRouter } from 'next/navigation';
 import { LogOut } from 'lucide-react';
+import { useAuth } from '../../../hooks/useAuth';
 
 export default function UsuariosPage() {
-  const router = useRouter();
-
-  const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("userRole");
-    router.push("/");
-  };
+  const { logout } = useAuth();
 
   return (
     <>
@@ -20,7 +14,7 @@ export default function UsuariosPage() {
         <div className="px-6 py-4 flex justify-between items-center">
           <h2 className="text-2xl font-bold text-gray-800">Usuarios</h2>
           <button
-            onClick={handleLogout}
+            onClick={logout}
             className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
             title="Cerrar sesión"
           >

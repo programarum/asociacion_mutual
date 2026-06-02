@@ -1,8 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, WifiOff, Loader2, CheckCircle2 } from "lucide-react";
+import AuthService from "../services/AuthService";
+import api from "../services/api";
+
+type ServerStatus = "checking" | "online" | "offline";
 
 export default function Home() {
   const router = useRouter();
@@ -11,31 +15,53 @@ export default function Home() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [serverStatus, setServerStatus] = useState<ServerStatus>("checking");
 
-  // Usuarios de ejemplo
-  const demoUsers = [
-    { email: "demo@mutual.com", password: "password123", role: "admin" },
-    { email: "user@mutual.com", password: "password123", role: "user" },
-  ];
+  // Verificar conexión al servidor al iniciar
+  useEffect(() => {
+    // Si ya está autenticado, redirigir al dashboard
+    if (AuthService.isAuthenticated()) {
+      router.push("/dashboard");
+      return;
+    }
+
+    checkServer();
+  }, [router]);
+
+  const checkServer = async () => {
+    setServerStatus("checking");
+    try {
+      await api.get("/asociados", { timeout: 5000 });
+      setServerStatus("online");
+    } catch (err: unknown) {
+      const error = err as { code?: string; response?: { status: number } };
+      // Si el servidor responde (aunque sea un error 401/403), está online
+      if (error.response) {
+        setServerStatus("online");
+      } else {
+        setServerStatus("offline");
+      }
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    // Simular delay de petición
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    const user = demoUsers.find(
-      (u) => u.email === email && u.password === password
-    );
-
-    if (user) {
-      localStorage.setItem("authToken", "demo-token-" + Date.now());
-      localStorage.setItem("userRole", user.role);
+    try {
+      await AuthService.login({ email, password });
       router.push("/dashboard");
-    } else {
-      setError("Email o contraseña incorrectos");
+    } catch (err: unknown) {
+      const error = err as { code?: string; response?: { data?: { message?: string }; status?: number } };
+      if (error.code === "ERR_NETWORK") {
+        setError("No se pudo conectar al servidor.");
+        setServerStatus("offline");
+      } else if (error.response?.data?.message) {
+        setError(error.response.data.message);
+      } else {
+        setError("Email o contraseña incorrectos");
+      }
     }
 
     setLoading(false);
@@ -52,6 +78,37 @@ export default function Home() {
             <p className="text-blue-100">Asociación Mutual</p>
           </div>
 
+          {/* Server Status Banner */}
+          {serverStatus === "checking" && (
+            <div className="px-8 py-3 bg-blue-50 border-b border-blue-200 flex items-center gap-2">
+              <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />
+              <p className="text-sm text-blue-700">Verificando conexión al servidor...</p>
+            </div>
+          )}
+          {/* {serverStatus === "online" && (
+            <div className="px-8 py-3 bg-green-50 border-b border-green-200 flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-green-500" />
+              <p className="text-sm text-green-700">Servidor conectado</p>
+            </div>
+          )} */}
+          {serverStatus === "offline" && (
+            <div className="px-8 py-3 bg-red-50 border-b border-red-200">
+              <div className="flex items-center gap-2 mb-2">
+                <WifiOff className="w-4 h-4 text-red-500" />
+                <p className="text-sm text-red-700 font-medium">Servidor no disponible</p>
+              </div>
+              <p className="text-xs text-red-600">
+                No se pudo conectar al servidor. Verifique que esté en ejecución.
+              </p>
+              <button
+                onClick={checkServer}
+                className="mt-2 text-xs text-red-700 font-semibold hover:text-red-900 underline transition-colors"
+              >
+                Reintentar conexión
+              </button>
+            </div>
+          )}
+
           {/* Form */}
           <div className="px-8 py-10">
             <form onSubmit={handleLogin} className="space-y-6">
@@ -67,9 +124,9 @@ export default function Home() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="demo@mutual.com"
+                    placeholder="correo@ejemplo.com"
                     className="w-full pl-10 pr-4 py-2.5 text-neutral-950 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition"
-                    disabled={loading}
+                    disabled={loading || serverStatus === "offline"}
                   />
                 </div>
               </div>
@@ -86,9 +143,9 @@ export default function Home() {
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="password123"
+                    placeholder="••••••••"
                     className="w-full pl-10 pr-10 py-2.5 text-neutral-950 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-600 focus:border-transparent outline-none transition"
-                    disabled={loading}
+                    disabled={loading || serverStatus === "offline"}
                   />
                   <button
                     type="button"
@@ -115,31 +172,12 @@ export default function Home() {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || serverStatus === "offline"}
                 className="w-full bg-linear-to-r from-teal-600 to-teal-700 text-white font-semibold py-2.5 rounded-lg hover:from-teal-700 hover:to-teal-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
               </button>
             </form>
-
-            {/* Demo Credentials */}
-            <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-xs font-semibold text-blue-900 mb-3">📝 CREDENCIALES DE PRUEBA:</p>
-              <div className="space-y-2">
-                <div>
-                  <p className="text-xs text-blue-800"><span className="font-semibold">Admin:</span></p>
-                  <p className="text-xs text-blue-800 ml-2">
-                    <span className="font-mono">demo@mutual.com</span> / <span className="font-mono">password123</span>
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-blue-800"><span className="font-semibold">Usuario:</span></p>
-                  <p className="text-xs text-blue-800 ml-2">
-                    <span className="font-mono">user@mutual.com</span> / <span className="font-mono">password123</span>
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Footer */}

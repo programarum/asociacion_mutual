@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { Cog, Menu, X, UserPlus, ShieldUser } from "lucide-react";
 import { useRole } from "../../hooks/useRole";
+import { useEffect, useState } from "react";
+import api from "@/services/api";
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -13,11 +15,27 @@ interface SidebarProps {
 export default function Sidebar({
   sidebarOpen,
   setSidebarOpen,
-  asociadosCount,
 }: SidebarProps) {
   const { isAdmin, isLoading } = useRole();
 
+ const [asociadosCount, setAsociadosCount] = useState(0) ;
+
+    useEffect(() => {
+    const fetchAsociadosCount = async () => {
+      try {
+        const response = await api.get("/asociados");
+        setAsociadosCount(response.data.length);
+      } catch (error) {
+        console.error("Error fetching asociados:", error);
+      }
+    };
+
+    fetchAsociadosCount();
+  }, []);
+
+ 
   if (isLoading) return null;
+
 
   return (
     <div

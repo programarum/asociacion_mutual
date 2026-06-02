@@ -4,11 +4,27 @@ import { useEffect, useState } from "react";
 import api from "../../../services/api";
 import { PencilLine, SquareChartGantt, Trash, LogOut } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useAuth } from "../../../hooks/useAuth";
+
+// Interfaz que describe la forma de un asociado desde la API
+interface Asociado {
+  codigo: string;
+  primer_nombre: string;
+  segundo_nombre?: string;
+  primer_apellido: string;
+  segundo_apellido?: string;
+  documento: string;
+  email: string;
+  telefono: string;
+  direccion: string;
+  mes_actual?: string;
+  mese_pagados?: number;
+  gran_total?: string | number;
+}
 
 export default function Asociados() {
-  const router = useRouter();
-  const [asociados, setAsociados] = useState([]);
+  const { logout } = useAuth();
+  const [asociados, setAsociados] = useState<Asociado[]>([]);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -25,11 +41,7 @@ export default function Asociados() {
     fetchAsociados();
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("userRole");
-    router.push("/");
-  };
+
 
   return (
     <>
@@ -38,7 +50,7 @@ export default function Asociados() {
         <div className="px-6 py-4 flex justify-between items-center">
           <h2 className="text-2xl font-bold text-gray-800">Asociados</h2>
           <button
-            onClick={handleLogout}
+            onClick={logout}
             className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
             title="Cerrar sesión"
           >
@@ -151,7 +163,7 @@ export default function Asociados() {
                         {asociado.mese_pagados || 0}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
-                        ${parseFloat(asociado.gran_total || 0).toFixed(2)}
+                        ${asociado.gran_total || 0}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button className="text-blue-600 hover:text-blue-800 mr-3 transition-colors">

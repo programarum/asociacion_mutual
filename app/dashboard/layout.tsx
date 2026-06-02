@@ -3,8 +3,10 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "../components/Sidebar";
+import ConnectionErrorBanner from "../components/ConnectionErrorBanner";
 import { useState } from "react";
 import { useRole } from "../../hooks/useRole";
+import AuthService from "../../services/AuthService";
 
 export default function DashboardLayout({
   children,
@@ -16,8 +18,7 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
-    const isAuthenticated = localStorage.getItem("authToken");
-    if (!isAuthenticated) {
+    if (!AuthService.isAuthenticated()) {
       router.push("/");
     }
   }, [router]);
@@ -32,6 +33,7 @@ export default function DashboardLayout({
 
   return (
     <div className="flex h-screen bg-gray-100">
+      <ConnectionErrorBanner />
       <Sidebar
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
