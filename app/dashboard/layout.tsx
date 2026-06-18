@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "../components/Sidebar";
+import Navbar from "../components/Navbar";
 import ConnectionErrorBanner from "../components/ConnectionErrorBanner";
 import { useState } from "react";
 import { useRole } from "../../hooks/useRole";
@@ -39,6 +40,7 @@ export default function DashboardLayout({
         setSidebarOpen={setSidebarOpen}
       />
       <div className="flex-1 flex flex-col overflow-hidden">
+        <Navbar />
         {children}
       </div>
     </div>

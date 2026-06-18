@@ -9,9 +9,25 @@ use Illuminate\Support\Facades\DB;
 
 class AsociadoController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return Asociado::with('beneficiarios')->paginate();
+        $search = $request->query('search');
+
+        $query = Asociado::with(['beneficiarios', 'cobertura']);
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('codigo', 'like', "%{$search}%")
+                  ->orWhere('primer_nombre', 'like', "%{$search}%")
+                  ->orWhere('segundo_nombre', 'like', "%{$search}%")
+                  ->orWhere('primer_apellido', 'like', "%{$search}%")
+                  ->orWhere('segundo_apellido', 'like', "%{$search}%")
+                  ->orWhere('documento', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        return $query->paginate();
     }
 
     public function store(Request $request)
@@ -37,7 +53,7 @@ class AsociadoController extends Controller
 
     public function show(Asociado $asociado)
     {
-        return $asociado->load('beneficiarios');
+        return $asociado->load(['beneficiarios', 'cobertura']);
     }
 
     public function update(Request $request, Asociado $asociado)

@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { LogOut, Trash, Loader2, UserPlus, X  } from 'lucide-react';
-import { useAuth } from '../../../hooks/useAuth';
+import { Trash, Loader2, UserPlus, X  } from 'lucide-react';
 import api from "../../../services/api";
 import AuthService from "../../../services/AuthService";
 
@@ -16,7 +15,6 @@ interface UserData {
 
 
 export default function UsuariosPage() {
-const { logout } = useAuth();
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
@@ -135,20 +133,6 @@ const { logout } = useAuth();
 
   return (
     <>
-      {/* Navbar */}
-      <nav className="bg-white shadow-md">
-        <div className="px-6 py-4 flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-gray-800">Gestión de Usuarios</h2>
-          <button
-            onClick={logout}
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-            title="Cerrar sesión"
-          >
-            <LogOut className="w-5 h-5 text-gray-600" />
-          </button>
-        </div>
-      </nav>
-
       {/* Content */}
       <main className="flex-1 overflow-auto p-6 relative">
         {/* Mensaje de notificación */}

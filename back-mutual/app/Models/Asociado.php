@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Asociado extends Model
 {
@@ -25,5 +26,15 @@ class Asociado extends Model
     public function beneficiarios(): HasMany
     {
         return $this->hasMany(Beneficiario::class);
+    }
+
+    public function pagos(): HasMany
+    {
+        return $this->hasMany(Pago::class);
+    }
+
+    public function cobertura(): HasOne
+    {
+        return $this->hasOne(Cobertura::class);
     }
 }
