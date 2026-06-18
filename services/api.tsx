@@ -1,20 +1,29 @@
 import axios from "axios";
 
+const getApiBaseUrl = () => {
+  if (typeof window === "undefined") {
+    // Server-side: use env or fallback
+    return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+  }
+  // Client-side: use env variable
+  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+};
+
 const api = axios.create({
-    baseURL: "http://localhost:8000/api",
-    timeout: 10000, // 10 segundos de timeout
+    baseURL: getApiBaseUrl(),
+    timeout: 10000,
 });
 
-// Interceptor: agregar token a requests
+const TOKEN_KEY = "auth_token";
+
 api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem(TOKEN_KEY);
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
 });
 
-// Interceptor de respuesta para manejar errores de conexión globalmente
 api.interceptors.response.use(
     (response) => response,
     (error) => {
@@ -27,7 +36,6 @@ api.interceptors.response.use(
             errorMessage =
                 "La solicitud tardó demasiado. El servidor no responde.";
         } else if (error.response) {
-            // El servidor respondió con un código de error
             const status = error.response.status;
             if (status === 500) {
                 errorMessage = "Error interno del servidor.";
@@ -35,16 +43,16 @@ api.interceptors.response.use(
                 errorMessage =
                     "El servidor no está disponible en este momento.";
             } else if (status === 401) {
-                localStorage.removeItem('auth_token');
+                localStorage.removeItem(TOKEN_KEY);
                 localStorage.removeItem('auth_user');
                 window.location.href = '/';
                 errorMessage = "No autorizado. Por favor inicie sesión de nuevo.";
             } else if (status === 403) {
-                errorMessage = "No tiene permisos para esta acción.";
+                errorMessage = "Acceso denegado: No tienes permisos para realizar esta acción.";
+                console.warn("[API 403]", error.response?.data?.message);
             }
         }
 
-        // Emitir evento personalizado para que la UI muestre el error
         if (typeof window !== "undefined") {
             const event = new CustomEvent("api-connection-error", {
                 detail: { message: errorMessage, status: error.response?.status },
@@ -52,7 +60,6 @@ api.interceptors.response.use(
             window.dispatchEvent(event);
         }
 
-        // Re-lanzar el error para que los catch existentes sigan funcionando
         return Promise.reject(error);
     }
 );

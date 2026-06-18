@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Mail, Lock, Eye, EyeOff, WifiOff, Loader2, CheckCircle2 } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, WifiOff, Loader2,  } from "lucide-react";
 import AuthService from "../services/AuthService";
 import api from "../services/api";
 
@@ -28,7 +28,7 @@ export default function Home() {
     checkServer();
   }, [router]);
 
-  const checkServer = async () => {
+  async function checkServer() {
     setServerStatus("checking");
     try {
       await api.get("/asociados", { timeout: 5000 });
@@ -42,7 +42,7 @@ export default function Home() {
         setServerStatus("offline");
       }
     }
-  };
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

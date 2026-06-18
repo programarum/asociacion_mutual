@@ -3,66 +3,117 @@
 namespace App\Http\Controllers;
 
 use App\Models\Asociado;
+use App\Models\Beneficiario;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AsociadoController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        return Asociado::all();
+        return Asociado::with('beneficiarios')->paginate();
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        $asociado = Asociado::create($request->all());
+        $validated = $request->validate([
+            'codigo' => 'required|string|unique:asociados,codigo',
+            'primer_nombre' => 'required|string|max:255',
+            'segundo_nombre' => 'nullable|string|max:255',
+            'primer_apellido' => 'required|string|max:255',
+            'segundo_apellido' => 'nullable|string|max:255',
+            'documento' => 'required|string|unique:asociados,documento',
+            'email' => 'required|email|unique:asociados,email',
+            'telefono' => 'required|string|max:255',
+            'direccion' => 'required|string|max:255',
+            'mes_actual' => 'nullable|date',
+            'mese_pagados' => 'nullable|string',
+            'gran_total' => 'nullable|string',
+        ]);
+
+        $asociado = Asociado::create($validated);
         return response()->json($asociado, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Asociado $asociado)
     {
-        return $asociado;
+        return $asociado->load('beneficiarios');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Asociado $asociado)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Asociado $asociado)
     {
-        $asociado->update($request->all());
+        $validated = $request->validate([
+            'codigo' => 'sometimes|string|unique:asociados,codigo,' . $asociado->id,
+            'primer_nombre' => 'sometimes|string|max:255',
+            'segundo_nombre' => 'nullable|string|max:255',
+            'primer_apellido' => 'sometimes|string|max:255',
+            'segundo_apellido' => 'nullable|string|max:255',
+            'documento' => 'sometimes|string|unique:asociados,documento,' . $asociado->id,
+            'email' => 'sometimes|email|unique:asociados,email,' . $asociado->id,
+            'telefono' => 'sometimes|string|max:255',
+            'direccion' => 'sometimes|string|max:255',
+            'mes_actual' => 'nullable|date',
+            'mese_pagados' => 'nullable|string',
+            'gran_total' => 'nullable|string',
+        ]);
+
+        $asociado->update($validated);
         return response()->json($asociado, 200);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Asociado $asociado)
     {
         $asociado->delete();
-        return response()->json();
+        return response()->json(null, 204);
+    }
+
+    /**
+     * Promociona un beneficiario a asociado y elimina el asociado anterior.
+     * El beneficiario seleccionado hereda los datos de contacto y pago del
+     * asociado anterior, y se elimina de la tabla de beneficiarios.
+     */
+    public function transferAndDelete(Request $request, Asociado $asociado)
+    {
+        $validated = $request->validate([
+            'beneficiario_id' => 'required|exists:beneficiarios,id',
+        ]);
+
+        $beneficiario = Beneficiario::findOrFail($validated['beneficiario_id']);
+
+        if ((int) $beneficiario->asociado_id !== (int) $asociado->id) {
+            return response()->json([
+                'message' => 'El beneficiario no pertenece a este asociado.',
+            ], 422);
+        }
+
+        return DB::transaction(function () use ($asociado, $beneficiario) {
+            $nuevoAsociado = Asociado::create([
+                'codigo' => $asociado->codigo,
+                'primer_nombre' => $beneficiario->primer_nombre,
+                'segundo_nombre' => $beneficiario->segundo_nombre,
+                'primer_apellido' => $beneficiario->primer_apellido,
+                'segundo_apellido' => $beneficiario->segundo_apellido,
+                'documento' => $beneficiario->documento,
+                'email' => $asociado->email,
+                'telefono' => $asociado->telefono,
+                'direccion' => $asociado->direccion,
+                'mes_actual' => $asociado->mes_actual,
+                'mese_pagados' => $asociado->mese_pagados,
+                'gran_total' => $asociado->gran_total,
+            ]);
+
+            // Reasignar los demás beneficiarios al nuevo asociado
+            $asociado->beneficiarios()
+                ->where('id', '!=', $beneficiario->id)
+                ->update(['asociado_id' => $nuevoAsociado->id]);
+
+            $beneficiario->delete();
+            $asociado->delete();
+
+            return response()->json([
+                'message' => 'Beneficiario promocionado y asociado anterior eliminado.',
+                'asociado' => $nuevoAsociado->load('beneficiarios'),
+            ], 200);
+        });
     }
 }

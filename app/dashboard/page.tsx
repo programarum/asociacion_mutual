@@ -1,29 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import api from "../../services/api";
 import { LogOut, ShieldAlert, User } from "lucide-react";
 import { useRole } from "../../hooks/useRole";
 import { useAuth } from "../../hooks/useAuth";
+import { useAsociados } from "../../hooks/useAsociados";
 
 export default function Dashboard() {
   const { role } = useRole();
   const { user: authUser, logout } = useAuth();
-  const [asociadosCount, setAsociadosCount] = useState(0);
-
-  useEffect(() => {
-    const fetchAsociadosCount = async () => {
-      try {
-        const response = await api.get("/asociados");
-        setAsociadosCount(response.data.length);
-      } catch (error) {
-        console.error("Error fetching asociados:", error);
-      }
-    };
-
-    fetchAsociadosCount();
-  }, []);
+  
+  // Fetch asociados; reuses cache from Sidebar if recently fetched
+  const { data } = useAsociados({ perPage: 1 });
+  const asociadosCount = data?.total ?? 0;
 
   return (
     <>

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AsociadoController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BeneficiarioController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -24,5 +25,11 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 });
 
-// Rutas de Asociados (mantienen su funcionalidad)
+// Rutas de Asociados
 Route::apiResource('asociados', AsociadoController::class);
+
+// Promocionar beneficiario a asociado y eliminar el asociado anterior
+Route::post('/asociados/{asociado}/transfer', [AsociadoController::class, 'transferAndDelete']);
+
+// Beneficiarios anidados a asociados
+Route::apiResource('asociados.beneficiarios', BeneficiarioController::class);

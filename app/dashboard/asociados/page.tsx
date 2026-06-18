@@ -5,9 +5,12 @@ import api from "../../../services/api";
 import { PencilLine, SquareChartGantt, Trash, LogOut } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "../../../hooks/useAuth";
+import BeneficiariosModal from "../../components/BeneficiariosModal";
+import EditAsociadoModal from "../../components/EditAsociadoModal";
+import DeleteAsociadoModal from "../../components/DeleteAsociadoModal";
 
-// Interfaz que describe la forma de un asociado desde la API
 interface Asociado {
+  id: number;
   codigo: string;
   primer_nombre: string;
   segundo_nombre?: string;
@@ -22,26 +25,43 @@ interface Asociado {
   gran_total?: string | number;
 }
 
+type ModalType = "beneficiarios" | "editar" | "eliminar" | null;
+
 export default function Asociados() {
   const { logout } = useAuth();
   const [asociados, setAsociados] = useState<Asociado[]>([]);
   const [isMounted, setIsMounted] = useState(false);
+  const [activeModal, setActiveModal] = useState<ModalType>(null);
+  const [selectedAsociado, setSelectedAsociado] = useState<Asociado | null>(
+    null
+  );
+
+  const fetchAsociados = async () => {
+    try {
+      const response = await api.get("/asociados");
+      setAsociados(response.data.data);
+    } catch (error) {
+      console.error("Error fetching asociados:", error);
+    }
+  };
 
   useEffect(() => {
     setIsMounted(true);
-    const fetchAsociados = async () => {
-      try {
-        const response = await api.get("/asociados");
-        setAsociados(response.data);
-      } catch (error) {
-        console.error("Error fetching asociados:", error);
-      }
-    };
-
     fetchAsociados();
   }, []);
 
+  const openModal = (type: ModalType, asociado: Asociado) => {
+    setSelectedAsociado(asociado);
+    setActiveModal(type);
+  };
 
+  const closeModal = () => {
+    setActiveModal(null);
+    setSelectedAsociado(null);
+  };
+
+  const nombreCompleto = (a: Asociado) =>
+    `${a.primer_nombre} ${a.primer_apellido}`;
 
   return (
     <>
@@ -124,7 +144,7 @@ export default function Asociados() {
                 {asociados.length > 0 ? (
                   asociados.map((asociado, index) => (
                     <tr
-                      key={index}
+                      key={asociado.id}
                       className={`${
                         index % 2 === 0 ? "bg-white" : "bg-gray-50"
                       } hover:bg-blue-50 transition-colors duration-200`}
@@ -165,14 +185,26 @@ export default function Asociados() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
                         ${asociado.gran_total || 0}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button className="text-blue-600 hover:text-blue-800 mr-3 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex items-center gap-2">
+                        <button
+                          onClick={() => openModal("beneficiarios", asociado)}
+                          className="text-green-600 hover:text-green-800 transition-colors"
+                          title="Beneficiarios"
+                        >
                           <SquareChartGantt />
                         </button>
-                        <button className="text-yellow-600 hover:text-yellow-800 mr-3 transition-colors">
+                        <button
+                          onClick={() => openModal("editar", asociado)}
+                          className="text-yellow-600 hover:text-yellow-800 transition-colors"
+                          title="Editar asociado"
+                        >
                           <PencilLine />
                         </button>
-                        <button className="text-red-600 hover:text-red-800 transition-colors">
+                        <button
+                          onClick={() => openModal("eliminar", asociado)}
+                          className="text-red-600 hover:text-red-800 transition-colors"
+                          title="Eliminar asociado"
+                        >
                           <Trash />
                         </button>
                       </td>
@@ -194,6 +226,35 @@ export default function Asociados() {
         </div>
       )}
       </main>
+
+      {/* Modales */}
+      {selectedAsociado && activeModal === "beneficiarios" && (
+        <BeneficiariosModal
+          asociadoId={selectedAsociado.id}
+          asociadoNombre={nombreCompleto(selectedAsociado)}
+          isOpen={true}
+          onClose={closeModal}
+        />
+      )}
+
+      {selectedAsociado && activeModal === "editar" && (
+        <EditAsociadoModal
+          asociado={selectedAsociado}
+          isOpen={true}
+          onClose={closeModal}
+          onUpdated={fetchAsociados}
+        />
+      )}
+
+      {selectedAsociado && activeModal === "eliminar" && (
+        <DeleteAsociadoModal
+          asociadoId={selectedAsociado.id}
+          asociadoNombre={nombreCompleto(selectedAsociado)}
+          isOpen={true}
+          onClose={closeModal}
+          onDeleted={fetchAsociados}
+        />
+      )}
     </>
   );
 }

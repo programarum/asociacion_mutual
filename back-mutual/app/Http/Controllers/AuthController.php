@@ -134,11 +134,7 @@ class AuthController extends Controller
      */
     public function getAllUsers(Request $request)
     {
-        $users = User::all();
-
-        return response()->json([
-            'users' => $users,
-        ], 200);
+        return User::paginate();
     }
 
     /**

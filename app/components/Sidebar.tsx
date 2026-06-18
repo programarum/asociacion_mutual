@@ -3,38 +3,27 @@
 import Link from "next/link";
 import { Cog, Menu, X, UserPlus, ShieldUser } from "lucide-react";
 import { useRole } from "../../hooks/useRole";
-import { useEffect, useState } from "react";
-import api from "@/services/api";
+import { useAsociados } from "../../hooks/useAsociados";
+import { useUsers } from "../../hooks/useUsers";
 
 interface SidebarProps {
   sidebarOpen: boolean;
   setSidebarOpen: (value: boolean) => void;
-  asociadosCount: number;
 }
 
 export default function Sidebar({
   sidebarOpen,
   setSidebarOpen,
 }: SidebarProps) {
-  const { isAdmin, isLoading } = useRole();
+  const { isAdmin, isLoading: roleLoading } = useRole();
+  
+  // Fetch counts; cached by React Query
+  const { data: asociadosData, isLoading: asociadosLoading } = useAsociados({ perPage: 1, enabled: !roleLoading });
+  const { data: usersData, isLoading: usersLoading } = useUsers({ perPage: 1, enabled: !roleLoading && isAdmin });
+  const asociadosCount = asociadosData?.total ?? 0;
+  const userCount = usersData?.total ?? 0;
 
- const [asociadosCount, setAsociadosCount] = useState(0) ;
-
-    useEffect(() => {
-    const fetchAsociadosCount = async () => {
-      try {
-        const response = await api.get("/asociados");
-        setAsociadosCount(response.data.length);
-      } catch (error) {
-        console.error("Error fetching asociados:", error);
-      }
-    };
-
-    fetchAsociadosCount();
-  }, []);
-
- 
-  if (isLoading) return null;
+  if (roleLoading || asociadosLoading || usersLoading) return null;
 
 
   return (
@@ -66,7 +55,7 @@ export default function Sidebar({
           )}
         </Link>
 
-        {/* Usuarios - Solo Admin */}
+        {/* Usuarios - Solo Admin (UI hint only; backend verifies actual permissions) */}
         {isAdmin && (
           <Link
             href="/dashboard/usuarios"
@@ -76,7 +65,7 @@ export default function Sidebar({
             {sidebarOpen && (
               <div className="flex-1">
                 <p className="font-medium">Usuarios</p>
-                <p className="text-xs text-stone-400">{asociadosCount} registrados</p>
+                <p className="text-xs text-stone-400">{userCount} registrados</p>
               </div>
             )}
           </Link>
