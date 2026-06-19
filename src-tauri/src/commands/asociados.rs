@@ -1,5 +1,4 @@
 use crate::commands::auth::DbState;
-use crate::commands::session::Session;
 use crate::models::asociado::*;
 use rusqlite::params;
 use tauri::State;

@@ -1,6 +1,4 @@
 use crate::models::user::*;
-use rusqlite::Connection;
-use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 
 /// Estado de sesión en memoria. Persiste mientras la app está abierta.
