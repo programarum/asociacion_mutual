@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Mail, Lock, Eye, EyeOff, WifiOff, Loader2,  } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Mail, Lock, Eye, EyeOff, WifiOff, Loader2, AlertCircle } from "lucide-react";
 import AuthService from "../services/AuthService";
 import api from "../services/api";
 
@@ -10,6 +10,7 @@ type ServerStatus = "checking" | "online" | "offline";
 
 export default function Home() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -25,17 +26,22 @@ export default function Home() {
       return;
     }
 
+    // Mostrar mensaje de sesión expirada si viene del redirect
+    if (searchParams.get("expired") === "1") {
+      setError("Su sesión ha expirado. Por favor inicie sesión de nuevo.");
+    }
+
     checkServer();
-  }, [router]);
+  }, [router, searchParams]);
 
   async function checkServer() {
     setServerStatus("checking");
     try {
-      await api.get("/asociados", { timeout: 5000 });
+      await api.get("/health", { timeout: 5000 });
       setServerStatus("online");
     } catch (err: unknown) {
       const error = err as { code?: string; response?: { status: number } };
-      // Si el servidor responde (aunque sea un error 401/403), está online
+      // Si el servidor responde (cualquier status), está online
       if (error.response) {
         setServerStatus("online");
       } else {

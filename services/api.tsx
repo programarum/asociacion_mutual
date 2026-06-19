@@ -43,10 +43,16 @@ api.interceptors.response.use(
                 errorMessage =
                     "El servidor no está disponible en este momento.";
             } else if (status === 401) {
+                const token = localStorage.getItem(TOKEN_KEY);
+                const isTokenExpired = !!token && !error.config?.url?.includes('/login');
                 localStorage.removeItem(TOKEN_KEY);
                 localStorage.removeItem('auth_user');
-                window.location.href = '/';
-                errorMessage = "No autorizado. Por favor inicie sesión de nuevo.";
+                errorMessage = isTokenExpired
+                    ? "Su sesión ha expirado. Por favor inicie sesión de nuevo."
+                    : "No autorizado. Por favor inicie sesión de nuevo.";
+                if (typeof window !== "undefined" && !error.config?.url?.includes('/login')) {
+                    window.location.href = '/?expired=' + (isTokenExpired ? '1' : '0');
+                }
             } else if (status === 403) {
                 errorMessage = "Acceso denegado: No tienes permisos para realizar esta acción.";
                 console.warn("[API 403]", error.response?.data?.message);

@@ -26,7 +26,11 @@ class AuthController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
-        $token = $user->createToken('auth-token')->plainTextToken;
+        $token = $user->createToken(
+            'auth-token',
+            ['*'],
+            now()->addMinutes(60)
+        )->plainTextToken;
 
         return response()->json([
             'message' => 'Usuario registrado exitosamente',
@@ -53,7 +57,11 @@ class AuthController extends Controller
             ]);
         }
 
-        $token = $user->createToken('auth-token')->plainTextToken;
+        $token = $user->createToken(
+            'auth-token',
+            ['*'],
+            now()->addMinutes(60)
+        )->plainTextToken;
 
         return response()->json([
             'message' => 'Sesión iniciada exitosamente',
@@ -98,16 +106,24 @@ class AuthController extends Controller
 
     /**
      * Actualizar perfil de usuario
+     * Requiere la contraseña actual para cualquier cambio.
      */
     public function updateProfile(Request $request)
     {
         $user = $request->user();
 
         $validated = $request->validate([
+            'current_password' => 'required|string',
             'name' => 'sometimes|string|max:255',
             'email' => 'sometimes|string|email|max:255|unique:users,email,' . $user->id,
             'password' => 'sometimes|string|min:8|confirmed',
         ]);
+
+        if (!Hash::check($validated['current_password'], $user->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => ['La contraseña actual es incorrecta.'],
+            ]);
+        }
 
         if (isset($validated['name'])) {
             $user->name = $validated['name'];
