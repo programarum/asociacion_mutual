@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { invoke } from "@tauri-apps/api/core";
 import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import AuthService from "../services/AuthService";
 
@@ -11,12 +12,27 @@ export default function Home() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [checkingLicense, setCheckingLicense] = useState(true);
 
   useEffect(() => {
-    if (AuthService.isAuthenticated()) {
-      navigate("/dashboard");
-      return;
-    }
+    // Verificar licencia primero
+    invoke<{ valid: boolean }>("verify_license")
+      .then((status) => {
+        if (!status.valid) {
+          navigate("/activacion");
+          return;
+        }
+        // Si la licencia es válida, verificar sesión
+        if (AuthService.isAuthenticated()) {
+          navigate("/dashboard");
+        }
+      })
+      .catch(() => {
+        navigate("/activacion");
+      })
+      .finally(() => {
+        setCheckingLicense(false);
+      });
 
     if (searchParams.get("expired") === "1") {
       setError("Su sesión ha expirado. Por favor inicie sesión de nuevo.");
@@ -38,6 +54,17 @@ export default function Home() {
 
     setLoading(false);
   };
+
+  if (checkingLicense) {
+    return (
+      <div className="min-h-screen bg-linear-to-br from-stone-900 via-slate-800 to-stone-900 flex items-center justify-center">
+        <div className="flex items-center gap-3 text-white">
+          <Loader2 className="w-6 h-6 animate-spin" />
+          <p>Verificando licencia...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-linear-to-br from-stone-900 via-slate-800 to-stone-900 flex items-center justify-center p-4">

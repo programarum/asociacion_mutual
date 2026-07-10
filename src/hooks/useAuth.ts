@@ -34,7 +34,7 @@ export function useAuth() {
     isAuthenticated,
     logout: async () => {
       await AuthService.logout();
-      navigate("/");
+      // El command logout en Rust cierra la app con app.exit(0)
     },
   };
 }

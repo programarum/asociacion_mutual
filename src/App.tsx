@@ -6,6 +6,7 @@ import { useRole } from "./hooks/useRole";
 import AuthService from "./services/AuthService";
 
 import Login from "./pages/login";
+import ActivacionPage from "./pages/activacion";
 import Dashboard from "./pages/dashboard";
 import Asociados from "./pages/asociados";
 import Usuarios from "./pages/usuarios";
@@ -47,6 +48,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Login />} />
+      <Route path="/activacion" element={<ActivacionPage />} />
       <Route element={<DashboardLayout />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/dashboard/asociados" element={<Asociados />} />

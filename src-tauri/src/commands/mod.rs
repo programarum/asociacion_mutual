@@ -8,3 +8,4 @@ pub mod fallecidos;
 pub mod configuracion;
 pub mod users;
 pub mod backup;
+pub mod license;

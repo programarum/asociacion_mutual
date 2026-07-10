@@ -67,6 +67,9 @@ pub fn run() {
             // Backup
             commands::backup::export_sqlite,
             commands::backup::export_sql,
+            // License
+            commands::license::verify_license,
+            commands::license::activate_license,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

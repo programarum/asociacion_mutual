@@ -25,3 +25,6 @@ rusqlite = { version = "0.31", features = ["bundled"] }
 bcrypt = "0.15"
 chrono = { version = "0.4", features = ["serde"] }
 tauri-plugin-dialog = "2"
+tauri-plugin-process = "2.3.1"
+ed25519-dalek = { version = "2.1", features = ["rand_core"] }
+sha2 = "0.10"

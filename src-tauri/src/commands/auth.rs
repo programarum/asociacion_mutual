@@ -2,7 +2,7 @@ use crate::commands::session::Session;
 use crate::models::user::*;
 use rusqlite::Connection;
 use std::sync::Mutex;
-use tauri::State;
+use tauri::{AppHandle, State};
 
 pub struct DbState(pub Mutex<Connection>);
 
@@ -54,8 +54,9 @@ pub fn get_current_user(session: State<'_, Session>) -> Result<Option<User>, Str
 }
 
 #[tauri::command]
-pub fn logout(session: State<'_, Session>) -> Result<(), String> {
+pub fn logout(session: State<'_, Session>, app: AppHandle) -> Result<(), String> {
     session.clear();
+    app.exit(0);
     Ok(())
 }
 
