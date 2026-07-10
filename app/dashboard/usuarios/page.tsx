@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Trash, Loader2, UserPlus, X  } from 'lucide-react';
-import api from "../../../services/api";
+import { Trash, Loader2, UserPlus, X } from "lucide-react";
+import { invoke } from "@tauri-apps/api/core";
 import AuthService from "../../../services/AuthService";
 
 interface UserData {
@@ -36,8 +36,8 @@ export default function UsuariosPage() {
 
   const fetchUsers = async () => {
     try {
-      const response = await api.get("/users");
-      setUsers(response.data.data);
+      const response = await invoke<{ data: UserData[] }>("list_users");
+      setUsers(response.data);
     } catch (error) {
       console.error("Error fetching users:", error);
       setMessage({ text: "Error al cargar los usuarios", type: "error" });
@@ -63,7 +63,7 @@ export default function UsuariosPage() {
   const handleChangeRole = async (userId: number, newRole: string) => {
     setActionLoading(userId);
     try {
-      await api.put(`/users/${userId}/role`, { role: newRole });
+      await invoke("change_user_role", { user_id: userId, role: newRole });
       setUsers((prev) =>
         prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
       );
@@ -79,7 +79,7 @@ export default function UsuariosPage() {
   const handleDelete = async (userId: number) => {
     setActionLoading(userId);
     try {
-      await api.delete(`/users/${userId}`);
+      await invoke("delete_user", { user_id: userId });
       setUsers((prev) => prev.filter((u) => u.id !== userId));
       setDeleteConfirm(null);
       setMessage({ text: "Usuario eliminado exitosamente", type: "success" });
@@ -101,20 +101,20 @@ export default function UsuariosPage() {
     
     setRegisterLoading(true);
     try {
-      // Usar api.post directamente para evitar que AuthService.register sobrescriba el token del admin
-      await api.post("/register", registerForm);
-      
+      await invoke("register", {
+        name: registerForm.name,
+        email: registerForm.email,
+        password: registerForm.password,
+      });
+
       setMessage({ text: "Usuario registrado exitosamente", type: "success" });
       setIsModalOpen(false);
       setRegisterForm({ name: "", email: "", password: "", password_confirmation: "" });
       fetchUsers(); // Recargar la lista
     } catch (error: any) {
       console.error("Error registering user:", error);
-      if (error.response?.data?.message) {
-        setRegisterError(error.response.data.message);
-      } else {
-        setRegisterError("Error al registrar el usuario");
-      }
+      const message = error?.message || "Error al registrar el usuario";
+      setRegisterError(message);
     }
     setRegisterLoading(false);
   };

@@ -1,5 +1,5 @@
 use crate::commands::auth::DbState;
-use crate::models::licencia::{Licencia, LicenseStatus};
+use crate::models::licencia::LicenseStatus;
 use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 use sha2::{Digest, Sha256};
 use std::process::Command;
