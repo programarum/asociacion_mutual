@@ -33,5 +33,17 @@ pub fn init_db(app: &AppHandle) -> Result<Connection, String> {
     conn.execute_batch("PRAGMA foreign_keys = ON;")
         .map_err(|e| format!("Error al habilitar foreign_keys: {}", e))?;
 
+    // Crear tabla de licencia si no existe (para BDs que ya existían antes de la feature de licencia)
+    conn.execute_batch(
+        "CREATE TABLE IF NOT EXISTS licencia (
+            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+            machine_hash TEXT NOT NULL,
+            license_key TEXT NOT NULL,
+            fecha_activacion DATETIME NOT NULL,
+            created_at DATETIME,
+            updated_at DATETIME
+        );"
+    ).map_err(|e| format!("Error al crear tabla licencia: {}", e))?;
+
     Ok(conn)
 }
