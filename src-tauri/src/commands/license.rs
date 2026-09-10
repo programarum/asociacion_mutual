@@ -2,8 +2,10 @@ use crate::commands::auth::DbState;
 use crate::models::licencia::LicenseStatus;
 use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 use sha2::{Digest, Sha256};
-use std::process::Command;
+use std::fs;
 use tauri::State;
+#[cfg(target_os = "windows")]
+use std::process::Command;
 
 // Clave pública Ed25519 embebida en el binario (32 bytes).
 // La clave privada NUNCA está aquí — solo el desarrollador la tiene.
@@ -15,11 +17,41 @@ const PUBLIC_KEY_BYTES: [u8; 32] = [
 ];
 
 /// Obtiene el número de serie del disco duro principal (Windows).
+#[cfg(target_os = "windows")]
 fn get_disk_serial() -> Result<String, String> {
+    powershell_serial().or_else(|_| wmic_serial())
+}
+
+/// Serial del disco vía PowerShell (Get-CimInstance). `wmic` está deprecado.
+#[cfg(target_os = "windows")]
+fn powershell_serial() -> Result<String, String> {
+    let script = "Get-CimInstance Win32_DiskDrive | ForEach-Object { $_.SerialNumber.Trim() } | Where-Object { $_ -ne '' } | Select-Object -First 1";
+    let output = Command::new("powershell")
+        .args(["-NoProfile", "-NonInteractive", "-Command", script])
+        .output()
+        .map_err(|e| format!("Error ejecutando PowerShell: {}", e))?;
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let serial = stdout
+        .lines()
+        .map(|l| l.trim().to_string())
+        .find(|s| !s.is_empty())
+        .unwrap_or_default();
+
+    if serial.is_empty() {
+        return Err("PowerShell no devolvió el serial del disco".to_string());
+    }
+
+    Ok(serial)
+}
+
+/// Serial del disco vía wmic (fallback para sistemas sin Get-CimInstance).
+#[cfg(target_os = "windows")]
+fn wmic_serial() -> Result<String, String> {
     let output = Command::new("wmic")
         .args(["diskdrive", "get", "serialnumber"])
         .output()
-        .map_err(|e| format!("Error al obtener serial del disco: {}", e))?;
+        .map_err(|e| format!("Error al obtener serial del disco (wmic): {}", e))?;
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let serial = stdout
@@ -30,10 +62,20 @@ fn get_disk_serial() -> Result<String, String> {
         .unwrap_or_default();
 
     if serial.is_empty() {
-        return Err("No se pudo obtener el serial del disco".to_string());
+        return Err("wmic no devolvió el serial del disco".to_string());
     }
 
     Ok(serial)
+}
+
+/// Obtiene un identificador estable de la máquina en sistemas no Windows
+/// (dev en Linux): el machine-id del sistema.
+#[cfg(not(target_os = "windows"))]
+fn get_disk_serial() -> Result<String, String> {
+    let id = fs::read_to_string("/etc/machine-id")
+        .or_else(|_| fs::read_to_string("/var/lib/dbus/machine-id"))
+        .map_err(|e| format!("No se pudo obtener el machine-id: {}", e))?;
+    Ok(id.trim().to_string())
 }
 
 /// Calcula el machine_id: SHA-256 del serial del disco, en hex.
@@ -77,6 +119,18 @@ fn verify_signature(machine_id: &str, license_key_hex: &str) -> Result<bool, Str
 /// Verifica el estado de la licencia actual.
 #[tauri::command]
 pub fn verify_license(db: State<'_, DbState>) -> Result<LicenseStatus, String> {
+    // En builds para Linux se omite la verificación de licencia;
+    // la licencia solo se exige en Windows.
+    #[cfg(target_os = "linux")]
+    {
+        let machine_id = compute_machine_id(&get_disk_serial()?);
+        return Ok(LicenseStatus {
+            valid: true,
+            machine_id,
+            needs_activation: false,
+        });
+    }
+
     let disk_serial = get_disk_serial()?;
     let machine_id = compute_machine_id(&disk_serial);
 

@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Asociación Mutual El Rosario
 
-## Getting Started
+Aplicación de escritorio para Windows para la gestión de una asociación mutual:
+asociados, beneficiarios, cuotas/pagos, cobertura, fallecidos, usuarios y
+licenciamiento por equipo.
 
-First, run the development server:
+## Stack
+
+**Frontend** (Vite SPA, empaquetada dentro de Tauri):
+
+- Vite 8 + React 19 + TypeScript
+- React Router 7 + TanStack Query 5
+- Tailwind CSS 4 + lucide-react
+
+**Backend embebido** (Rust / Tauri 2):
+
+- Tauri 2.11 + plugins (dialog, log, process)
+- SQLite vía `rusqlite` (compilación "bundled", sin archivo .dll)
+- `bcrypt` (hash de contraseñas), `chrono`, `ed25519-dalek` + `sha2` (licencias)
+
+No existe API HTTP: el frontend invoca comandos Rust con `invoke` de
+`@tauri-apps/api/core`.
+
+## Requisitos
+
+- Node.js 22 + pnpm 11 (`corepack enable` / `npm i -g pnpm`)
+- Rust stable (rustup)
+- **Linux dev**: paquetes GTK/WebKit (ver `scripts/dev-linux.sh`)
+- **Windows build**: runner Windows (CI con `.github/workflows/build-windows.yml`).
+  Tauri **no cross-compila** de Linux → Windows; el instalador se genera en CI o
+  una máquina Windows.
+
+## Comandos
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install        # instalar dependencias
+pnpm dev            # solo frontend (Vite, :5173)
+pnpm tauri dev      # app de escritorio en modo dev
+pnpm build          # build frontend (Vite → dist/)
+pnpm tauri build    # build escritorio + instalador (en Windows)
+pnpm test           # tests frontend (Vitest, una vez)
+pnpm test:rust      # tests Rust (cargo test)
+pnpm test:all       # ambos
+pnpm lint           # ESLint
+pnpm typecheck      # tsc --noEmit
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Base de datos
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+SQLite. La BD "semilla" vive en `src-tauri/resources/mutual.sqlite` y se copia al
+directorio de datos de la app en el primer arranque (`src-tauri/src/db.rs`);
+también existe `mutual.sqlite` en la raíz con datos de desarrollo.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Tablas principales: `users`, `asociados`, `beneficiarios`, `pagos`,
+`coberturas`, `configuracion`, `fallecidos`, `licencia`.
 
-## Learn More
+## Licencias
 
-To learn more about Next.js, take a look at the following resources:
+Cada instalación queda vinculada a su hardware (hash SHA-256 del serial del
+disco). El desarrollador firma el `machine_id` con la clave privada Ed25519
+(`tools/license_tool.py` + `tools/.private_key`, **nunca se commitea la clave
+privada**); la app verifica la firma con la clave pública embebida.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+En builds para Linux la verificación se omite (no se exige licencia); la
+licencia solo se exige en Windows (`src-tauri/src/commands/license.rs`).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Build Windows (CI)
 
-## Deploy on Vercel
+Ver `.github/workflows/build-windows.yml`:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Runner `windows-latest`
+- `pnpm install --frozen-lockfile` → `pnpm tauri build`
+- Produce instalador **NSIS (.exe)** y **MSI** como artifacts
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Estructura
+
+```
+src/                  frontend SPA (pages, components, hooks, services, test)
+src-tauri/            backend Rust: commands/, models/, services/, db.rs
+src-tauri/resources/  mutual.sqlite (BD semilla empaquetada)
+tools/                generador de licencias (license_tool.py)
+.github/workflows/    CI para build Windows
+scripts/              scripts de dev para Linux
+plans/                histórico de planes de mejora
+```

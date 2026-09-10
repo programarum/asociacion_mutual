@@ -39,7 +39,7 @@ export function useCreatePago(asociadoId: number) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (meses: number) => {
-      return await invoke("create_pago", { asociadoId, meses });
+      return await invoke<Pago>("create_pago", { asociadoId, meses });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pagos", asociadoId] });

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Loader2, History, Printer } from "lucide-react";
+import { X, Loader2, History, Printer, Search } from "lucide-react";
 import { usePagos } from "../hooks/usePagos";
 import ComprobantePrint from "./ComprobantePrint";
 
@@ -21,11 +21,27 @@ export default function HistorialPagosModal({
     enabled: isOpen,
   });
   const [printPagoId, setPrintPagoId] = useState<number | null>(null);
+  const [query, setQuery] = useState("");
 
   if (!isOpen) return null;
 
   const pagos = data?.data ?? [];
-  const totalPagado = pagos.reduce(
+  const filteredPagos = pagos.filter((p) => {
+    const q = query.trim().toLowerCase();
+    if (!q) return true;
+    const haystack = [
+      formatDate(p.fecha_pago),
+      formatDate(p.mes_desde),
+      formatDate(p.mes_hasta),
+      `$${(typeof p.monto === "string" ? parseFloat(p.monto) : p.monto).toFixed(2)}`,
+      String(p.meses_pagados),
+      `${p.meses_pagados} ${p.meses_pagados === 1 ? "mes" : "meses"}`,
+    ]
+      .join(" ")
+      .toLowerCase();
+    return haystack.includes(q);
+  });
+  const totalPagado = filteredPagos.reduce(
     (sum, p) => sum + (typeof p.monto === "string" ? parseFloat(p.monto) : p.monto),
     0
   );
@@ -60,16 +76,27 @@ export default function HistorialPagosModal({
             </div>
           ) : pagos.length > 0 ? (
             <>
+              <div className="relative mb-4">
+                <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Buscar por fecha, monto o período..."
+                  className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm text-black outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
               <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200 flex justify-between items-center">
                 <span className="text-sm text-blue-700">
-                  Total pagado ({pagos.length} pago
-                  {pagos.length !== 1 ? "s" : ""}):
+                  Total pagado ({filteredPagos.length} pago
+                  {filteredPagos.length !== 1 ? "s" : ""}):
                 </span>
                 <span className="text-xl font-bold text-blue-800">
                   ${totalPagado.toFixed(2)}
                 </span>
               </div>
 
+              {filteredPagos.length > 0 ? (
               <div className="overflow-x-auto rounded-lg border border-gray-200">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-stone-700">
@@ -95,7 +122,7 @@ export default function HistorialPagosModal({
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {pagos.map((p) => (
+                    {filteredPagos.map((p) => (
                       <tr
                         key={p.id}
                         className="hover:bg-blue-50 transition-colors"
@@ -129,6 +156,14 @@ export default function HistorialPagosModal({
                   </tbody>
                 </table>
               </div>
+              ) : (
+                <div className="py-8 text-center text-gray-500">
+                  <p className="text-lg">Sin resultados</p>
+                  <p className="text-sm mt-1">
+                    No hay pagos que coincidan con la búsqueda.
+                  </p>
+                </div>
+              )}
             </>
           ) : (
             <div className="py-8 text-center text-gray-500">

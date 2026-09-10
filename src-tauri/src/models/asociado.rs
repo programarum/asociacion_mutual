@@ -23,7 +23,7 @@ pub struct Asociado {
     pub cobertura: Option<crate::models::Cobertura>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PaginatedResponse<T> {
     pub data: Vec<T>,
     pub total: i64,

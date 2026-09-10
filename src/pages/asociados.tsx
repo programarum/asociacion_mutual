@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import {
   PencilLine,
@@ -61,7 +61,7 @@ export default function Asociados() {
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
 
-  const fetchAsociados = async (searchTerm?: string) => {
+  const fetchAsociados = useCallback(async (searchTerm?: string) => {
     try {
       const result = await invoke<{ data: Asociado[] }>("list_asociados", {
         search: searchTerm || null,
@@ -70,12 +70,12 @@ export default function Asociados() {
     } catch (error) {
       console.error("Error fetching asociados:", error);
     }
-  };
+  }, []);
 
   useEffect(() => {
     setIsMounted(true);
     fetchAsociados();
-  }, []);
+  }, [fetchAsociados]);
 
   // Debounce para búsqueda
   useEffect(() => {
@@ -86,7 +86,7 @@ export default function Asociados() {
       }
     }, 300);
     return () => clearTimeout(timer);
-  }, [searchInput]);
+  }, [searchInput, search, fetchAsociados]);
 
   const handleClearSearch = () => {
     setSearchInput("");

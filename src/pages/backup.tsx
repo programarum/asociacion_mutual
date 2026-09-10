@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Database, FileCode, Loader2, Download, CheckCircle } from "lucide-react";
+import { Database, FileCode, Loader2, Download } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 
 export default function BackupPage() {

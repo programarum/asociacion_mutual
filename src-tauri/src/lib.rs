@@ -63,6 +63,7 @@ pub fn run() {
             // Users
             commands::users::list_users,
             commands::users::change_user_role,
+            commands::users::update_user,
             commands::users::delete_user,
             // Backup
             commands::backup::export_sqlite,

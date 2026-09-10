@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { X, Loader2, CreditCard } from "lucide-react";
 import { useCobertura } from "../hooks/useCobertura";
 import { useCreatePago } from "../hooks/usePagos";
+import ComprobantePrint from "./ComprobantePrint";
 
 interface RegistrarPagoModalProps {
   asociadoId: number;
@@ -24,6 +25,7 @@ export default function RegistrarPagoModal({
 
   const [meses, setMeses] = useState<number>(1);
   const [error, setError] = useState("");
+  const [paidPagoId, setPaidPagoId] = useState<number | null>(null);
 
   const maxMeses = data?.max_meses_pagables ?? 0;
   const cuotaMensual = data?.cuota_mensual ?? 0;
@@ -58,8 +60,8 @@ export default function RegistrarPagoModal({
     }
 
     try {
-      await createMutation.mutateAsync(meses);
-      onClose();
+      const pago = await createMutation.mutateAsync(meses);
+      setPaidPagoId(pago.id);
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } };
       setError(e.response?.data?.message || "Error al registrar el pago");
@@ -70,6 +72,7 @@ export default function RegistrarPagoModal({
     d ? d.split("T")[0] : "Sin registros";
 
   return (
+    <>
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
         {/* Header */}
@@ -240,5 +243,19 @@ export default function RegistrarPagoModal({
         </form>
       </div>
     </div>
+
+      {/* Recibo del pago registrado */}
+      {paidPagoId && (
+        <ComprobantePrint
+          asociadoId={asociadoId}
+          pagoId={paidPagoId}
+          isOpen={true}
+          onClose={() => {
+            setPaidPagoId(null);
+            onClose();
+          }}
+        />
+      )}
+    </>
   );
 }

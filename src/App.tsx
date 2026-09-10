@@ -13,6 +13,7 @@ import Usuarios from "./pages/usuarios";
 import Setting from "./pages/setting";
 import Fallecidos from "./pages/fallecidos";
 import Backup from "./pages/backup";
+import PrintRecibo from "./pages/PrintRecibo";
 
 function DashboardLayout() {
   const navigate = useNavigate();
@@ -49,6 +50,10 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Login />} />
       <Route path="/activacion" element={<ActivacionPage />} />
+      <Route
+        path="/print/:asociadoId/:pagoId"
+        element={<PrintRecibo />}
+      />
       <Route element={<DashboardLayout />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/dashboard/asociados" element={<Asociados />} />

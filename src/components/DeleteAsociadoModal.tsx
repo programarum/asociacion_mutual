@@ -29,7 +29,6 @@ export default function DeleteAsociadoModal({
 
   const [selectedBeneficiario, setSelectedBeneficiario] =
     useState<number | null>(null);
-  const [mode, setMode] = useState<"select" | "confirm">("select");
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState(false);
 
@@ -135,7 +134,6 @@ export default function DeleteAsociadoModal({
                       checked={selectedBeneficiario === b.id}
                       onChange={() => {
                         setSelectedBeneficiario(b.id);
-                        setMode("confirm");
                       }}
                       className="w-4 h-4"
                     />

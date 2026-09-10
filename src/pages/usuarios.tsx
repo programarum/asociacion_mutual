@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Trash, Loader2, UserPlus, X  } from 'lucide-react';
+import { Trash, Loader2, UserPlus, X, Pencil } from 'lucide-react';
 import { invoke } from "@tauri-apps/api/core";
 import AuthService from "../services/AuthService";
 
@@ -29,6 +29,10 @@ export default function UsuariosPage() {
   });
   const [registerLoading, setRegisterLoading] = useState(false);
   const [registerError, setRegisterError] = useState("");
+  const [editUser, setEditUser] = useState<UserData | null>(null);
+  const [editForm, setEditForm] = useState({ name: "", email: "", role: "usuario" });
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState("");
 
   const [currentUser, setCurrentUser] = useState<{ id: number } | null>(null);
 
@@ -61,7 +65,7 @@ export default function UsuariosPage() {
   const handleChangeRole = async (userId: number, newRole: string) => {
     setActionLoading(userId);
     try {
-      await invoke("change_user_role", { user_id: userId, role: newRole });
+      await invoke("change_user_role", { userId, role: newRole });
       setUsers((prev) =>
         prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
       );
@@ -73,11 +77,47 @@ export default function UsuariosPage() {
     setActionLoading(null);
   };
 
+  const openEditModal = (user: UserData) => {
+    setEditUser(user);
+    setEditForm({ name: user.name, email: user.email, role: user.role });
+    setEditError("");
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEditError("");
+
+    if (!editUser || !editForm.name.trim() || !editForm.email.trim()) {
+      setEditError("El nombre y el correo son obligatorios");
+      return;
+    }
+
+    setEditLoading(true);
+    try {
+      const updated = await invoke<UserData>("update_user", {
+        userId: editUser.id,
+        name: editForm.name,
+        email: editForm.email,
+        role: editForm.role,
+      });
+      setUsers((prev) => prev.map((user) => (user.id === updated.id ? updated : user)));
+      setEditUser(null);
+      setMessage({ text: "Usuario actualizado exitosamente", type: "success" });
+    } catch (error) {
+      console.error("Error updating user:", error);
+      const msg = error instanceof Error ? error.message : String(error);
+      setEditError(msg || "Error al actualizar el usuario");
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
   // Eliminar usuario
   const handleDelete = async (userId: number) => {
+
     setActionLoading(userId);
     try {
-      await invoke("delete_user", { user_id: userId });
+      await invoke("delete_user", { userId });
       setUsers((prev) => prev.filter((u) => u.id !== userId));
       setDeleteConfirm(null);
       setMessage({ text: "Usuario eliminado exitosamente", type: "success" });
@@ -109,7 +149,7 @@ export default function UsuariosPage() {
       setIsModalOpen(false);
       setRegisterForm({ name: "", email: "", password: "", password_confirmation: "" });
       fetchUsers();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error registering user:", error);
       const msg = error instanceof Error ? error.message : String(error);
       setRegisterError(msg || "Error al registrar el usuario");
@@ -245,32 +285,42 @@ export default function UsuariosPage() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           {currentUser?.id === user.id ? (
                             <span className="text-xs text-gray-400">—</span>
-                          ) : deleteConfirm === user.id ? (
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => handleDelete(user.id)}
-                                disabled={actionLoading === user.id}
-                                className="text-xs bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 transition-colors disabled:opacity-50"
-                              >
-                                {actionLoading === user.id
-                                  ? "Eliminando..."
-                                  : "Confirmar"}
-                              </button>
-                              <button
-                                onClick={() => setDeleteConfirm(null)}
-                                className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded hover:bg-gray-300 transition-colors"
-                              >
-                                Cancelar
-                              </button>
-                            </div>
                           ) : (
-                            <button
-                              onClick={() => setDeleteConfirm(user.id)}
-                              className="text-red-600 hover:text-red-800 transition-colors"
-                              title="Eliminar usuario"
-                            >
-                              <Trash className="w-5 h-5" />
-                            </button>
+                            <div className="flex items-center gap-3">
+                              <button
+                                onClick={() => openEditModal(user)}
+                                disabled={actionLoading === user.id}
+                                className="text-blue-600 hover:text-blue-800 transition-colors disabled:opacity-50"
+                                title="Editar usuario"
+                              >
+                                <Pencil className="w-5 h-5" />
+                              </button>
+                              {deleteConfirm === user.id ? (
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() => handleDelete(user.id)}
+                                    disabled={actionLoading === user.id}
+                                    className="text-xs bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 transition-colors disabled:opacity-50"
+                                  >
+                                    {actionLoading === user.id ? "Eliminando..." : "Confirmar"}
+                                  </button>
+                                  <button
+                                    onClick={() => setDeleteConfirm(null)}
+                                    className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded hover:bg-gray-300 transition-colors"
+                                  >
+                                    Cancelar
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => setDeleteConfirm(user.id)}
+                                  className="text-red-600 hover:text-red-800 transition-colors"
+                                  title="Eliminar usuario"
+                                >
+                                  <Trash className="w-5 h-5" />
+                                </button>
+                              )}
+                            </div>
                           )}
                         </td>
                       </tr>
@@ -382,6 +432,87 @@ export default function UsuariosPage() {
                 >
                   {registerLoading && <Loader2 className="w-4 h-4 animate-spin" />}
                   Registrar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {editUser && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+              <h3 className="text-lg font-bold text-gray-800">Editar usuario</h3>
+              <button
+                onClick={() => setEditUser(null)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+                disabled={editLoading}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="p-6 space-y-4">
+              {editError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+                  {editError}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                <input
+                  type="text"
+                  required
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-3 text-black py-2 outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={editLoading}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  required
+                  value={editForm.email}
+                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-3 text-black py-2 outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={editLoading}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Rol</label>
+                <select
+                  value={editForm.role}
+                  onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-3 text-black py-2 outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={editLoading}
+                >
+                  <option value="administrador">Administrador</option>
+                  <option value="usuario">Usuario</option>
+                </select>
+              </div>
+
+              <div className="pt-4 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setEditUser(null)}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
+                  disabled={editLoading}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={editLoading}
+                  className="px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2 font-medium"
+                >
+                  {editLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Guardar cambios
                 </button>
               </div>
             </form>

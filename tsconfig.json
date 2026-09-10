@@ -13,10 +13,11 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
+    "types": ["vitest/globals", "node"],
     "paths": {
       "@/*": ["./src/*"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.mts"],
-  "exclude": ["node_modules", "app", "back-mutual", "src-tauri"]
+  "exclude": ["node_modules", "src-tauri"]
 }

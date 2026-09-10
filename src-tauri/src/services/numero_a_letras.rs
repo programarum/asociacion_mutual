@@ -103,3 +103,80 @@ fn convertir_centenas(numero: i64) -> String {
 
     partes.join(" ")
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_cero() {
+        assert_eq!(convertir_entero(0), "cero");
+    }
+
+    #[test]
+    fn test_unidades() {
+        assert_eq!(convertir_entero(1), "uno");
+        assert_eq!(convertir_entero(5), "cinco");
+        assert_eq!(convertir_entero(9), "nueve");
+    }
+
+    #[test]
+    fn test_del_10_al_29() {
+        assert_eq!(convertir_entero(10), "diez");
+        assert_eq!(convertir_entero(15), "quince");
+        assert_eq!(convertir_entero(20), "veinte");
+        assert_eq!(convertir_entero(21), "veintiuno");
+        assert_eq!(convertir_entero(29), "veintinueve");
+    }
+
+    #[test]
+    fn test_decenas() {
+        assert_eq!(convertir_entero(30), "treinta");
+        assert_eq!(convertir_entero(40), "cuarenta");
+        assert_eq!(convertir_entero(99), "noventa y nueve");
+        assert_eq!(convertir_entero(45), "cuarenta y cinco");
+    }
+
+    #[test]
+    fn test_centenas() {
+        assert_eq!(convertir_entero(100), "cien");
+        assert_eq!(convertir_entero(101), "ciento uno");
+        assert_eq!(convertir_entero(200), "doscientos");
+        assert_eq!(convertir_entero(345), "trescientos cuarenta y cinco");
+        assert_eq!(convertir_entero(999), "novecientos noventa y nueve");
+    }
+
+    #[test]
+    fn test_miles() {
+        assert_eq!(convertir_entero(1000), "mil");
+        assert_eq!(convertir_entero(1001), "mil uno");
+        assert_eq!(convertir_entero(1500), "mil quinientos");
+        assert_eq!(convertir_entero(2025), "dos mil veinticinco");
+        assert_eq!(convertir_entero(9999), "nueve mil novecientos noventa y nueve");
+    }
+
+    #[test]
+    fn test_millones() {
+        assert_eq!(convertir_entero(1_000_000), "un millón");
+        assert_eq!(convertir_entero(1_000_001), "un millón uno");
+        assert_eq!(convertir_entero(2_000_000), "dos millones");
+        assert_eq!(convertir_entero(2_500_000), "dos millones quinientos mil");
+        assert_eq!(
+            convertir_entero(1_234_567),
+            "un millón doscientos treinta y cuatro mil quinientos sesenta y siete"
+        );
+    }
+
+    #[test]
+    fn test_convertir() {
+        let result = convertir(1234.56);
+        assert!(result.starts_with("Mil"));
+        assert!(result.contains("pesos m/cte"));
+    }
+
+    #[test]
+    fn test_convertir_cero() {
+        let result = convertir(0.0);
+        assert_eq!(result, "Cero pesos m/cte");
+    }
+}

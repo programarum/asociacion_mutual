@@ -41,6 +41,51 @@ pub fn change_user_role(user_id: i64, role: String, db: State<'_, DbState>, sess
 }
 
 #[tauri::command]
+pub fn update_user(user_id: i64, name: String, email: String, role: String, db: State<'_, DbState>, session: State<'_, Session>) -> Result<User, String> {
+    if !session.is_admin() {
+        return Err("No tienes permisos".to_string());
+    }
+
+    if name.trim().is_empty() || email.trim().is_empty() {
+        return Err("El nombre y el correo son obligatorios".to_string());
+    }
+
+    if role != "administrador" && role != "usuario" {
+        return Err("Rol inválido".to_string());
+    }
+
+    let conn = db.0.lock().map_err(|e| e.to_string())?;
+    let duplicate: Option<i64> = conn.query_row(
+        "SELECT id FROM users WHERE email = ?1 AND id != ?2",
+        params![email.trim(), user_id],
+        |row| row.get(0),
+    ).ok();
+
+    if duplicate.is_some() {
+        return Err("Ya existe un usuario con este email".to_string());
+    }
+
+    conn.execute(
+        "UPDATE users SET name = ?1, email = ?2, role = ?3 WHERE id = ?4",
+        params![name.trim(), email.trim(), role, user_id],
+    ).map_err(|e| e.to_string())?;
+
+    let updated = conn.query_row(
+        "SELECT id, name, email, role, created_at FROM users WHERE id = ?1",
+        [user_id],
+        |row| {
+            Ok(User { id: row.get(0)?, name: row.get(1)?, email: row.get(2)?, role: row.get(3)?, created_at: row.get(4)? })
+        },
+    ).map_err(|e| e.to_string())?;
+
+    if session.get_user().map(|user| user.id) == Some(user_id) {
+        session.set_user(updated.clone());
+    }
+
+    Ok(updated)
+}
+
+#[tauri::command]
 pub fn delete_user(user_id: i64, db: State<'_, DbState>, session: State<'_, Session>) -> Result<(), String> {
     if !session.is_admin() {
         return Err("No tienes permisos".to_string());

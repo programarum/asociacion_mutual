@@ -281,3 +281,156 @@ impl CoberturaService {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rusqlite::Connection;
+
+    fn setup_db() -> Connection {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(
+            "CREATE TABLE configuracion (
+                id INTEGER PRIMARY KEY,
+                cuota_mensual REAL NOT NULL DEFAULT 0,
+                cuota_administracion REAL NOT NULL DEFAULT 0
+            );
+            CREATE TABLE coberturas (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                asociado_id INTEGER NOT NULL,
+                fecha_inicio TEXT,
+                mes_pagado_hasta TEXT,
+                estado TEXT NOT NULL DEFAULT 'moroso',
+                created_at TEXT,
+                updated_at TEXT
+            );
+            CREATE TABLE asociados (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                codigo TEXT NOT NULL,
+                primer_nombre TEXT NOT NULL,
+                primer_apellido TEXT NOT NULL,
+                documento TEXT NOT NULL,
+                email TEXT,
+                telefono TEXT,
+                direccion TEXT,
+                mes_actual TEXT,
+                mese_pagados TEXT,
+                gran_total TEXT,
+                created_at TEXT,
+                updated_at TEXT
+            );
+            CREATE TABLE beneficiarios (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                asociado_id INTEGER NOT NULL,
+                primer_nombre TEXT NOT NULL,
+                primer_apellido TEXT NOT NULL,
+                documento TEXT NOT NULL,
+                fecha_nacimiento TEXT,
+                parentesco TEXT,
+                sexo TEXT,
+                fecha_afiliacion TEXT,
+                created_at TEXT,
+                updated_at TEXT
+            );
+            CREATE TABLE pagos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                asociado_id INTEGER NOT NULL,
+                meses_pagados INTEGER NOT NULL,
+                monto REAL NOT NULL,
+                fecha_pago TEXT NOT NULL,
+                mes_desde TEXT,
+                mes_hasta TEXT,
+                created_at TEXT,
+                updated_at TEXT
+            );"
+        ).unwrap();
+        conn
+    }
+
+    #[test]
+    fn test_get_configuracion_creates_default() {
+        let conn = setup_db();
+        let config = CoberturaService::get_configuracion(&conn).unwrap();
+        assert_eq!(config.id, 1);
+        assert!((config.cuota_mensual - 0.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_get_configuracion_existing() {
+        let conn = setup_db();
+        conn.execute(
+            "INSERT INTO configuracion (id, cuota_mensual, cuota_administracion) VALUES (1, 150.0, 25.0)",
+            [],
+        ).unwrap();
+        let config = CoberturaService::get_configuracion(&conn).unwrap();
+        assert!((config.cuota_mensual - 150.0).abs() < f64::EPSILON);
+        assert!((config.cuota_administracion - 25.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn test_get_cobertura_none() {
+        let conn = setup_db();
+        let cobertura = CoberturaService::get_cobertura(&conn, 1).unwrap();
+        assert!(cobertura.is_none());
+    }
+
+    #[test]
+    fn test_get_cobertura_exists() {
+        let conn = setup_db();
+        conn.execute(
+            "INSERT INTO coberturas (asociado_id, fecha_inicio, mes_pagado_hasta, estado)
+             VALUES (1, '2026-01-01', '2026-06-01', 'vigente')",
+            [],
+        ).unwrap();
+        let cobertura = CoberturaService::get_cobertura(&conn, 1).unwrap();
+        assert!(cobertura.is_some());
+        assert_eq!(cobertura.unwrap().estado, "vigente");
+    }
+
+    #[test]
+    fn test_recalcular_estado_moroso() {
+        let conn = setup_db();
+        conn.execute(
+            "INSERT INTO coberturas (asociado_id, fecha_inicio, mes_pagado_hasta, estado)
+             VALUES (1, '2020-01-01', '2020-01-01', 'vigente')",
+            [],
+        ).unwrap();
+        let estado = CoberturaService::recalcular_estado(&conn, 1).unwrap();
+        assert_eq!(estado, "moroso");
+    }
+
+    #[test]
+    fn test_max_meses_pagables_sin_cobertura() {
+        let conn = setup_db();
+        conn.execute(
+            "INSERT INTO configuracion (id, cuota_mensual, cuota_administracion) VALUES (1, 100.0, 10.0)",
+            [],
+        ).unwrap();
+        let max = CoberturaService::max_meses_pagables(&conn, 1).unwrap();
+        // Should be between 1 and 12 depending on current date
+        assert!(max >= 1);
+        assert!(max <= 12);
+    }
+
+    #[test]
+    fn test_get_cobertura_response() {
+        let conn = setup_db();
+        conn.execute(
+            "INSERT INTO configuracion (id, cuota_mensual, cuota_administracion) VALUES (1, 100.0, 10.0)",
+            [],
+        ).unwrap();
+        conn.execute(
+            "INSERT INTO asociados (id, codigo, primer_nombre, primer_apellido, documento)
+             VALUES (1, 'A001', 'Juan', 'Pérez', '12345678')",
+            [],
+        ).unwrap();
+
+        let response = CoberturaService::get_cobertura_response(&conn, 1).unwrap();
+        assert_eq!(response.estado, "moroso");
+        assert!(response.cobertura.is_none());
+        assert!((response.cuota_mensual - 100.0).abs() < f64::EPSILON);
+        assert_eq!(response.beneficiarios_count, 0);
+        assert_eq!(response.personas, 1);
+        assert!((response.monto_por_mes - 110.0).abs() < f64::EPSILON);
+    }
+}
+
