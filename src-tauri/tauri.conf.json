@@ -26,6 +26,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "createUpdaterArtifacts": true,
     "resources": ["resources/mutual.sqlite"],
     "icon": [
       "icons/icon-32.png",
@@ -35,6 +36,17 @@
     ],
     "android": {
       "debugApplicationIdSuffix": ".debug"
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEFFQzhEQ0VERTAyRDJFQ0IKUldUTExpM2c3ZHpJcmdCYnV1anNxQkFKK25PU3NuYU1RaDlPZk94RW1SSzJnbTlHeDVRVWxLMjkK",
+      "endpoints": [
+        "https://github.com/programarum/asociacion_mutual/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
     }
   }
 }

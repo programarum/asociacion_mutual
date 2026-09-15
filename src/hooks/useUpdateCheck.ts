@@ -10,6 +10,19 @@ interface UpdateInfo {
   notes?: string;
 }
 
+interface UpdaterManifest {
+  version?: string;
+  notes?: string;
+  pub_date?: string;
+  platforms?: {
+    "windows-x86_64"?: {
+      signature?: string;
+      url?: string;
+    };
+    [key: string]: unknown;
+  };
+}
+
 interface UpdateCheckResult {
   available: boolean;
   update?: UpdateInfo;
@@ -34,19 +47,31 @@ export function useUpdateCheck(): UpdateCheckResult {
 
     (async () => {
       try {
-        const [installed, remote] = await Promise.all([
+        const [installed, manifest] = await Promise.all([
           invoke<string>("get_app_version"),
           fetch(UPDATE_ENDPOINT).then((res) => {
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            return res.json() as Promise<UpdateInfo>;
+            return res.json() as Promise<UpdaterManifest>;
           }),
         ]);
-        if (cancelled) return;
-        if (compareVersions(remote.version, installed) > 0) {
-          setState({ available: true, update: remote });
+
+        const platform = manifest.platforms?.["windows-x86_64"];
+        const remote = manifest.version ?? "";
+        if (platform?.url && remote) {
+          const available = compareVersions(remote, installed) > 0;
+          if (available && !cancelled) {
+            setState({
+              available: true,
+              update: {
+                version: remote,
+                url: platform.url,
+                notes: manifest.notes,
+              },
+            });
+          }
         }
       } catch {
-        if (!cancelled) setState({ available: false });
+        // Sin conexion o manifiesto no publicado: no molestar.
       }
     })();
 

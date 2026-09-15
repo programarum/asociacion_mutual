@@ -10,6 +10,7 @@
     "core:webview:allow-print",
     "core:webview:allow-set-webview-zoom",
     "process:default",
-    "opener:default"
+    "opener:default",
+    "updater:default"
   ]
 }
