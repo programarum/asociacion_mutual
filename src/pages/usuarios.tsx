@@ -172,7 +172,7 @@ export default function UsuariosPage() {
   return (
     <>
       {/* Content */}
-      <main className="flex-1 overflow-auto p-6 relative">
+      <main className="flex-1 overflow-auto p-4 sm:p-6 relative">
         {/* Mensaje de notificación */}
         {message && (
           <div

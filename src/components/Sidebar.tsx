@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   Cog,
@@ -29,6 +30,12 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
   });
   const asociadosCount = asociadosData?.total ?? 0;
   const userCount = usersData?.total ?? 0;
+
+  useEffect(() => {
+    if (window.innerWidth < 1100) {
+      setSidebarOpen(false);
+    }
+  }, [setSidebarOpen]);
 
   if (roleLoading || asociadosLoading || usersLoading) return null;
 

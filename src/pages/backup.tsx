@@ -48,7 +48,7 @@ export default function BackupPage() {
   };
 
   return (
-    <main className="flex-1 overflow-auto p-6">
+    <main className="flex-1 overflow-auto p-4 sm:p-6">
       {message && (
         <div
           className={`mb-4 p-3 rounded-lg border ${

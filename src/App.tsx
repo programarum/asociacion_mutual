@@ -4,6 +4,7 @@ import Sidebar from "./components/Sidebar";
 import Navbar from "./components/Navbar";
 import UpdateBanner from "./components/UpdateBanner";
 import { useRole } from "./hooks/useRole";
+import { useZoom } from "./hooks/useZoom";
 import AuthService from "./services/AuthService";
 
 import Login from "./pages/login";
@@ -48,6 +49,8 @@ function DashboardLayout() {
 }
 
 export default function App() {
+  useZoom();
+
   return (
     <Routes>
       <Route path="/" element={<Login />} />

@@ -35,7 +35,7 @@ export default function FallecidosPage() {
 
   return (
     <>
-      <main className="flex-1 overflow-auto p-6">
+      <main className="flex-1 overflow-auto p-4 sm:p-6">
         <div className="flex justify-between items-center mb-4 gap-4">
           <p className="text-gray-600">
             Registro de asociados y beneficiarios fallecidos.
