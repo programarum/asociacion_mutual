@@ -33,7 +33,7 @@ Flujo para publicar una versión firmada y que la app instalada se actualice sol
    Genera `*-setup.exe` y su `.sig` en `src-tauri\target\release\bundle\nsis\`.
 3. Publicar el release (sube instalador + `.sig` + `latest.json`):
    ```powershell
-   pnpm win-publish.ps1 -Version 0.2.0 -Notes "Cambios"
+   powershell -ExecutionPolicy Bypass -File scripts/win-publish.ps1 -Version 0.2.0 -Notes "Cambios"
    ```
 4. Confirmar que el endpoint responde:
    ```
