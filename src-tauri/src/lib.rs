@@ -12,6 +12,7 @@ use tauri::Manager;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(
@@ -71,6 +72,8 @@ pub fn run() {
             // License
             commands::license::verify_license,
             commands::license::activate_license,
+            // Updater
+            commands::updater::get_app_version,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

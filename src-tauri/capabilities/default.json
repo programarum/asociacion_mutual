@@ -8,6 +8,7 @@
   "permissions": [
     "core:default",
     "core:webview:allow-print",
-    "process:default"
+    "process:default",
+    "opener:default"
   ]
 }

@@ -1,4 +1,6 @@
 import type { ComprobanteData } from "../hooks/useComprobante";
+import encabezadoImg from "../assets/recibos/encabezado.png";
+import pieImg from "../assets/recibos/pie.png";
 
 interface ReciboContentProps {
   data: ComprobanteData;
@@ -11,17 +13,12 @@ export default function ReciboContent({ data }: ReciboContentProps) {
     <div className="comprobante-recibo p-8 text-black min-h-screen print:min-h-0">
       <style>{`
         @media print {
-          @page {
-            size: 140mm 215mm;
-            margin: 15mm;
-          }
           body {
             margin: 0;
           }
           .comprobante-recibo {
             padding: 0 !important;
             min-height: 0;
-            page-break-inside: avoid;
           }
         }
         .comprobante-recibo {
@@ -32,14 +29,25 @@ export default function ReciboContent({ data }: ReciboContentProps) {
           border-top: 1px dashed #000;
           margin: 8px 0;
         }
+        .recibo-img {
+          display: block;
+          width: 100%;
+          height: auto;
+        }
       `}</style>
 
       {/* Encabezado */}
+      <img
+        src={encabezadoImg}
+        alt="Encabezado"
+        width={859}
+        height={290}
+        style={{ aspectRatio: "859 / 290" }}
+        className="recibo-img mb-4"
+      />
+
       <div className="text-center mb-4">
-        <h1 className="text-xl font-bold uppercase">
-          Asociación Mutual
-        </h1>
-        <h2 className="text-base font-semibold uppercase mt-1">
+        <h2 className="text-base font-semibold uppercase">
           Recibo de Pago N° {data.recibo_numero}
         </h2>
       </div>
@@ -143,6 +151,18 @@ export default function ReciboContent({ data }: ReciboContentProps) {
             Sello y Firma Administración
           </p>
         </div>
+      </div>
+
+      {/* Pie de página */}
+      <div className="mt-6">
+        <img
+          src={pieImg}
+          alt="Pie de página"
+          width={899}
+          height={253}
+          style={{ aspectRatio: "899 / 253" }}
+          className="recibo-img"
+        />
       </div>
     </div>
   );

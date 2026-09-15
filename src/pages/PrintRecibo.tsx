@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Loader2, Printer, ArrowLeft } from "lucide-react";
 import ReciboContent from "../components/ReciboContent";
@@ -8,6 +8,8 @@ import AuthService from "../services/AuthService";
 export default function PrintRecibo() {
   const { asociadoId, pagoId } = useParams();
   const navigate = useNavigate();
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const [pageHeightHmm, setPageHeightHmm] = useState(215);
 
   const asociadoIdNum = Number(asociadoId);
   const pagoIdNum = Number(pagoId);
@@ -28,6 +30,13 @@ export default function PrintRecibo() {
     }
   }, [navigate]);
 
+  useLayoutEffect(() => {
+    if (!data || !sheetRef.current) return;
+    const heightPx = sheetRef.current.offsetHeight;
+    const heightHmm = Math.ceil((heightPx * 25.4) / 96 + 30) + 2;
+    setPageHeightHmm(Math.max(heightHmm, 215));
+  }, [data]);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -40,6 +49,14 @@ export default function PrintRecibo() {
 
   return (
     <div className="bg-gray-100 min-h-screen print:bg-white print:min-h-0">
+      <style>{`
+        @media print {
+          @page {
+            size: 140mm ${pageHeightHmm}mm;
+            margin: 15mm;
+          }
+        }
+      `}</style>
       {/* Toolbar (oculto en impresión) */}
       <div className="print:hidden sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
@@ -72,7 +89,10 @@ export default function PrintRecibo() {
       </div>
 
       {/* Contenido del recibo */}
-      <div className="max-w-4xl mx-auto p-4 print:p-0 print:max-w-none">
+      <div
+        className="mx-auto py-6 print:py-0"
+        style={{ width: "110mm" }}
+      >
         {isLoading ? (
           <div className="py-16 text-center flex items-center justify-center gap-2">
             <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
@@ -85,7 +105,10 @@ export default function PrintRecibo() {
             </p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow-lg print:rounded-none print:shadow-none">
+          <div
+            ref={sheetRef}
+            className="bg-white rounded-lg shadow-lg print:rounded-none print:shadow-none"
+          >
             <ReciboContent data={data} />
           </div>
         )}

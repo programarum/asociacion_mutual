@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, Outlet, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Sidebar from "./components/Sidebar";
 import Navbar from "./components/Navbar";
+import UpdateBanner from "./components/UpdateBanner";
 import { useRole } from "./hooks/useRole";
 import AuthService from "./services/AuthService";
 
@@ -38,6 +39,7 @@ function DashboardLayout() {
     <div className="flex h-screen bg-gray-100">
       <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       <div className="flex-1 flex flex-col overflow-hidden">
+        <UpdateBanner />
         <Navbar />
         <Outlet />
       </div>

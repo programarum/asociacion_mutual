@@ -19,6 +19,7 @@
   "dependencies": {
     "@tanstack/react-query": "^5.101.0",
     "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/plugin-opener": "^2.5.5",
     "@tauri-apps/plugin-process": "^2.3.1",
     "lucide-react": "^1.17.0",
     "react": "19.2.4",
@@ -26,6 +27,7 @@
     "react-router-dom": "^7.18.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9",
     "@tailwindcss/postcss": "^4",
     "@tauri-apps/cli": "^2.11.4",
     "@testing-library/jest-dom": "^7.0.0",
@@ -35,7 +37,6 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.0.2",
-    "@eslint/js": "^9",
     "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^9",
     "eslint-plugin-react-hooks": "^5.2.0",
@@ -45,8 +46,8 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "typescript-eslint": "^8.35.1",
-    "vitest": "^4.1.10",
-    "vite": "^8.0.16"
+    "vite": "^8.0.16",
+    "vitest": "^4.1.10"
   },
   "packageManager": "pnpm@11.10.0+sha512.0b7f8b98060031904c017e3a41eb187a16d40eeb829b95c4f8cb03681761fc4ab53dd219115b9b447f4dce1a05a214764461e7d3703392a9f32f9511ce8c86c8"
 }
