@@ -5,6 +5,22 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+# ---- probe pre-build: validar que la clave de firma no sea un placeholder ----
+$probeKey = $env:TAURI_SIGNING_PRIVATE_KEY
+if ([string]::IsNullOrWhiteSpace($probeKey)) {
+  throw "TAURI_SIGNING_PRIVATE_KEY vacia. Cargala: `$env:TAURI_SIGNING_PRIVATE_KEY = (Get-Content .tauri\mutual.key -Raw).Trim()"
+}
+if ($probeKey -match "Private key|<") {
+  throw "TAURI_SIGNING_PRIVATE_KEY parece placeholder o contenido pegado. " +
+    "Cargala desde el archivo, ver CHECKLIST.md -> 'Generar la clave de firma'."
+}
+try {
+  [Convert]::FromBase64String(($probeKey -replace "\s", "")) | Out-Null
+} catch {
+  throw "TAURI_SIGNING_PRIVATE_KEY no es base64 valido. Revisa de donde la copiaste " +
+    "(el private-key NO lleva < > ni 'Private key:'): " + $_
+}
+
 $bundle = "src-tauri\target\release\bundle"
 $exe = Get-ChildItem "$bundle\nsis\*-setup.exe" -ErrorAction SilentlyContinue |
   Sort-Object LastWriteTime -Descending | Select-Object -First 1

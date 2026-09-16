@@ -15,9 +15,13 @@ Flujo para publicar una versión firmada y que la app instalada se actualice sol
   ```powershell
   pnpm tauri signer generate -w .tauri/mutual.key
   ```
-- Guardar en un lugar seguro (fuera de git):
-  - la clave **privada** (línea "private key")
+- Guardar en un lugar seguro, FUERA de git (ej: USB):
+  - la clave **privada** (la base64 con `=` del final)
   - la **contraseña** elegida
+  > **NO RECUPERABLE:** si perdés la privada **no hay forma de recuperarla**. Lo único posible
+  > es regenerar un par nuevo (`pnpm tauri signer generate -w .tauri/mutual.key`), actualizar la
+  > **pública** en `tauri.conf.json` → `plugins.updater.pubkey` y volver a publicar.
+  > La BD `mutual.sqlite` no se ve afectada por eso.
 - La clave **pública** ya está configurada en `src-tauri/tauri.conf.json` → `plugins.updater.pubkey`.
   No la cambies salvo que regeneres el par.
 
@@ -26,8 +30,11 @@ Flujo para publicar una versión firmada y que la app instalada se actualice sol
 1. Subir la versión del `Cargo.toml`/`package.json` (misma en ambos). Ej: `0.2.0`
 2. Construir el instalador firmado (desde `front-mutual\`):
    ```powershell
-   $env:TAURI_SIGNING_PRIVATE_KEY = "<clave privada>"
-   $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = "<pass>"
+   # Carga la clave DESDE el archivo .key (no pegues texto literal entre <>):
+   $env:TAURI_SIGNING_PRIVATE_KEY = (Get-Content .tauri\mutual.key -Raw).Trim()
+   # El password te lo pide el build; SI elegiste uno, ponelo aca (sin <>):
+   $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = "<tu_pass_real_si_existe>"
+
    pnpm tauri build
    ```
    Genera `*-setup.exe` y su `.sig` en `src-tauri\target\release\bundle\nsis\`.
