@@ -46,3 +46,6 @@ next-env.d.ts
 
 # license private key (NUNCA commitear)
 tools/.private_key
+
+# Tauri updater signing private key (NUNCA commitear)
+.tauri/
