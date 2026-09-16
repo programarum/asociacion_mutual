@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import NuevoAsociadoModal from "../components/NuevoAsociadoModal";
 import BeneficiariosModal from "../components/BeneficiariosModal";
 import EditAsociadoModal from "../components/EditAsociadoModal";
 import DeleteAsociadoModal from "../components/DeleteAsociadoModal";
@@ -43,6 +44,7 @@ interface Asociado {
 }
 
 type ModalType =
+  | "nuevo"
   | "beneficiarios"
   | "editar"
   | "eliminar"
@@ -114,6 +116,12 @@ export default function Asociados() {
       {/* Content */}
       <main className="flex-1 overflow-auto p-4 sm:p-6">
         <div className="flex justify-between items-center mb-4 gap-4">
+          <button
+            onClick={() => setActiveModal("nuevo")}
+            className="btn btn-primary shrink-0"
+          >
+            Nuevo Asociado
+          </button>
           {/* Buscador */}
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
@@ -353,6 +361,17 @@ export default function Asociados() {
           isOpen={true}
           onClose={closeModal}
           onCompleted={fetchAsociados}
+        />
+      )}
+
+      {activeModal === "nuevo" && (
+        <NuevoAsociadoModal
+          isOpen={true}
+          onClose={closeModal}
+          onCreated={() => {
+            setActiveModal(null);
+            fetchAsociados();
+          }}
         />
       )}
     </>
