@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Loader2, Printer, ArrowLeft } from "lucide-react";
 import ReciboContent from "../components/ReciboContent";
@@ -9,7 +9,6 @@ export default function PrintRecibo() {
   const { asociadoId, pagoId } = useParams();
   const navigate = useNavigate();
   const sheetRef = useRef<HTMLDivElement>(null);
-  const [pageHeightHmm, setPageHeightHmm] = useState(215);
 
   const asociadoIdNum = Number(asociadoId);
   const pagoIdNum = Number(pagoId);
@@ -30,13 +29,6 @@ export default function PrintRecibo() {
     }
   }, [navigate]);
 
-  useLayoutEffect(() => {
-    if (!data || !sheetRef.current) return;
-    const heightPx = sheetRef.current.offsetHeight;
-    const heightHmm = Math.ceil((heightPx * 25.4) / 96 + 30) + 2;
-    setPageHeightHmm(Math.max(heightHmm, 215));
-  }, [data]);
-
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -52,11 +44,14 @@ export default function PrintRecibo() {
       <style>{`
         @media print {
           @page {
-            size: 140mm ${pageHeightHmm}mm;
-            margin: 15mm;
+            /* Papel precortado 13.97 × 21.59 cm (≈ 14 × 21.5 cm) */
+            size: 140mm 215.9mm;
+            /* Márgenes mínimos: sup/izq/der 5mm · inferior 10mm (rango 5-12mm) */
+            margin: 5mm 5mm 10mm 5mm;
           }
         }
       `}</style>
+
       {/* Toolbar (oculto en impresión) */}
       <div className="print:hidden sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">

@@ -6,6 +6,8 @@ use std::fs;
 use tauri::State;
 #[cfg(target_os = "windows")]
 use std::process::Command;
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
 
 // Clave pública Ed25519 embebida en el binario (32 bytes).
 // La clave privada NUNCA está aquí — solo el desarrollador la tiene.
@@ -27,6 +29,7 @@ fn get_disk_serial() -> Result<String, String> {
 fn powershell_serial() -> Result<String, String> {
     let script = "Get-CimInstance Win32_DiskDrive | ForEach-Object { $_.SerialNumber.Trim() } | Where-Object { $_ -ne '' } | Select-Object -First 1";
     let output = Command::new("powershell")
+        .creation_flags(0x08000000) // CREATE_NO_WINDOW: sin ventana de consola
         .args(["-NoProfile", "-NonInteractive", "-Command", script])
         .output()
         .map_err(|e| format!("Error ejecutando PowerShell: {}", e))?;
@@ -49,6 +52,7 @@ fn powershell_serial() -> Result<String, String> {
 #[cfg(target_os = "windows")]
 fn wmic_serial() -> Result<String, String> {
     let output = Command::new("wmic")
+        .creation_flags(0x08000000) // CREATE_NO_WINDOW: sin ventana de consola
         .args(["diskdrive", "get", "serialnumber"])
         .output()
         .map_err(|e| format!("Error al obtener serial del disco (wmic): {}", e))?;
