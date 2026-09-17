@@ -1,4 +1,4 @@
-#!/usr/bin/env pwsh
+﻿#!/usr/bin/env pwsh
 # ============================================================
 # win-rebuild.ps1 — Build firmado en 1 clic (PC Windows de build)
 #
