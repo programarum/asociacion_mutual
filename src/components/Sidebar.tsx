@@ -79,7 +79,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
           )}
         </Link>
 
-        {isAdmin && (
+        
           <Link
             to="/dashboard/fallecidos"
             className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-stone-700 transition-colors"
@@ -91,7 +91,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
               </div>
             )}
           </Link>
-        )}
+     
 
         {isAdmin && (
           <Link
@@ -110,7 +110,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
           </Link>
         )}
 
-        {isAdmin && (
+        
           <Link
             to="/dashboard/setting"
             className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-stone-700 transition-colors"
@@ -122,9 +122,9 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
               </div>
             )}
           </Link>
-        )}
+     
 
-        {isAdmin && (
+        
           <Link
             to="/dashboard/backup"
             className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-stone-700 transition-colors"
@@ -136,7 +136,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
               </div>
             )}
           </Link>
-        )}
+     
       </nav>
 
       <div className="p-4 border-t border-stone-700">
