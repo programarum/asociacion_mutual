@@ -30,12 +30,13 @@ pub fn list_beneficiarios(asociado_id: i64, db: State<'_, DbState>) -> Result<Pa
 
 #[tauri::command]
 pub fn create_beneficiario(asociado_id: i64, req: CreateBeneficiarioRequest, db: State<'_, DbState>) -> Result<Beneficiario, String> {
+    let ahora = crate::services::timestamps::ahora_sql();
     let id = {
         let conn = db.0.lock().map_err(|e| e.to_string())?;
         conn.execute(
-            "INSERT INTO beneficiarios (asociado_id, primer_nombre, segundo_nombre, primer_apellido, segundo_apellido, documento, fecha_nacimiento, parentesco, sexo, fecha_afiliacion)
-            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
-            params![asociado_id, req.primer_nombre, req.segundo_nombre, req.primer_apellido, req.segundo_apellido, req.documento, req.fecha_nacimiento, req.parentesco, req.sexo, req.fecha_afiliacion],
+            "INSERT INTO beneficiarios (asociado_id, primer_nombre, segundo_nombre, primer_apellido, segundo_apellido, documento, fecha_nacimiento, parentesco, sexo, fecha_afiliacion, created_at, updated_at)
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
+            params![asociado_id, req.primer_nombre, req.segundo_nombre, req.primer_apellido, req.segundo_apellido, req.documento, req.fecha_nacimiento, req.parentesco, req.sexo, req.fecha_afiliacion, ahora, ahora],
         ).map_err(|e| e.to_string())?;
         conn.last_insert_rowid()
     };
@@ -44,11 +45,12 @@ pub fn create_beneficiario(asociado_id: i64, req: CreateBeneficiarioRequest, db:
 
 #[tauri::command]
 pub fn update_beneficiario(asociado_id: i64, id: i64, req: CreateBeneficiarioRequest, db: State<'_, DbState>) -> Result<Beneficiario, String> {
+    let ahora = crate::services::timestamps::ahora_sql();
     {
         let conn = db.0.lock().map_err(|e| e.to_string())?;
         conn.execute(
-            "UPDATE beneficiarios SET primer_nombre=?1, segundo_nombre=?2, primer_apellido=?3, segundo_apellido=?4, documento=?5, fecha_nacimiento=?6, parentesco=?7, sexo=?8, fecha_afiliacion=?9 WHERE id=?10 AND asociado_id=?11",
-            params![req.primer_nombre, req.segundo_nombre, req.primer_apellido, req.segundo_apellido, req.documento, req.fecha_nacimiento, req.parentesco, req.sexo, req.fecha_afiliacion, id, asociado_id],
+            "UPDATE beneficiarios SET primer_nombre=?1, segundo_nombre=?2, primer_apellido=?3, segundo_apellido=?4, documento=?5, fecha_nacimiento=?6, parentesco=?7, sexo=?8, fecha_afiliacion=?9, updated_at=?12 WHERE id=?10 AND asociado_id=?11",
+            params![req.primer_nombre, req.segundo_nombre, req.primer_apellido, req.segundo_apellido, req.documento, req.fecha_nacimiento, req.parentesco, req.sexo, req.fecha_afiliacion, id, asociado_id, ahora],
         ).map_err(|e| e.to_string())?;
     }
     list_beneficiarios(asociado_id, db)?.data.into_iter().find(|b| b.id == id).ok_or("No encontrado".to_string())

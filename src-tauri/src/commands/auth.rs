@@ -88,9 +88,11 @@ pub fn register(
 
     let hash = bcrypt::hash(&password, 12).map_err(|e| e.to_string())?;
 
+    let ahora = crate::services::timestamps::ahora_sql();
+
     conn.execute(
-        "INSERT INTO users (name, email, password, role) VALUES (?1, ?2, ?3, 'usuario')",
-        rusqlite::params![&name, &email, &hash],
+        "INSERT INTO users (name, email, password, role, created_at, updated_at) VALUES (?1, ?2, ?3, 'usuario', ?4, ?5)",
+        rusqlite::params![&name, &email, &hash, &ahora, &ahora],
     )
     .map_err(|e| e.to_string())?;
 
@@ -101,7 +103,7 @@ pub fn register(
         name,
         email,
         role: "usuario".to_string(),
-        created_at: Some(chrono::Utc::now().to_rfc3339()),
+        created_at: Some(ahora),
     })
 }
 
@@ -145,6 +147,10 @@ pub fn update_profile(
         conn.execute("UPDATE users SET password = ?1 WHERE id = ?2", rusqlite::params![new_hash, user.id])
             .map_err(|e| e.to_string())?;
     }
+
+    let ahora = crate::services::timestamps::ahora_sql();
+    conn.execute("UPDATE users SET updated_at = ?1 WHERE id = ?2", rusqlite::params![ahora, user.id])
+        .map_err(|e| e.to_string())?;
 
     let updated = conn
         .query_row(

@@ -60,10 +60,12 @@ pub fn marcar_asociado_fallecido(
         "mes_actual": asoc.9, "mese_pagados": asoc.10, "gran_total": asoc.11
     }).to_string();
 
+    let ahora = crate::services::timestamps::ahora_sql();
+
     tx.execute(
-        "INSERT INTO fallecidos (tipo, primer_nombre, segundo_nombre, primer_apellido, segundo_apellido, documento, fecha_fallecimiento, asociado_origen_id, datos_extras)
-        VALUES ('asociado', ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
-        params![asoc.1, asoc.2, asoc.3, asoc.4, asoc.5, req.fecha_fallecimiento, asociado_id, extras],
+        "INSERT INTO fallecidos (tipo, primer_nombre, segundo_nombre, primer_apellido, segundo_apellido, documento, fecha_fallecimiento, asociado_origen_id, datos_extras, created_at, updated_at)
+        VALUES ('asociado', ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+        params![asoc.1, asoc.2, asoc.3, asoc.4, asoc.5, req.fecha_fallecimiento, asociado_id, extras, ahora, ahora],
     ).map_err(|e| e.to_string())?;
 
     let ben = tx.query_row(
@@ -73,9 +75,9 @@ pub fn marcar_asociado_fallecido(
     ).map_err(|_| "El beneficiario no pertenece a este asociado".to_string())?;
 
     tx.execute(
-        "INSERT INTO asociados (codigo, primer_nombre, segundo_nombre, primer_apellido, segundo_apellido, documento, email, telefono, direccion, mes_actual, mese_pagados, gran_total)
-        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
-        params![asoc.0, ben.0, ben.1, ben.2, ben.3, ben.4, asoc.6, asoc.7, asoc.8, asoc.9, asoc.10, asoc.11],
+        "INSERT INTO asociados (codigo, primer_nombre, segundo_nombre, primer_apellido, segundo_apellido, documento, email, telefono, direccion, mes_actual, mese_pagados, gran_total, created_at, updated_at)
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
+        params![asoc.0, ben.0, ben.1, ben.2, ben.3, ben.4, asoc.6, asoc.7, asoc.8, asoc.9, asoc.10, asoc.11, ahora, ahora],
     ).map_err(|e| e.to_string())?;
 
     let nuevo_id = tx.last_insert_rowid();
@@ -106,10 +108,12 @@ pub fn marcar_beneficiario_fallecido(
         |row| Ok((row.get::<_, String>(0)?, row.get::<_, Option<String>>(1)?, row.get::<_, String>(2)?, row.get::<_, Option<String>>(3)?, row.get::<_, String>(4)?, row.get::<_, Option<String>>(5)?, row.get::<_, String>(6)?, row.get::<_, String>(7)?)),
     ).map_err(|_| "El beneficiario no pertenece a este asociado".to_string())?;
 
+    let ahora = crate::services::timestamps::ahora_sql();
+
     conn.execute(
-        "INSERT INTO fallecidos (tipo, primer_nombre, segundo_nombre, primer_apellido, segundo_apellido, documento, fecha_fallecimiento, fecha_afiliacion, asociado_origen_id, parentesco, sexo)
-        VALUES ('beneficiario', ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
-        params![ben.0, ben.1, ben.2, ben.3, ben.4, req.fecha_fallecimiento, ben.5, asociado_id, ben.6, ben.7],
+        "INSERT INTO fallecidos (tipo, primer_nombre, segundo_nombre, primer_apellido, segundo_apellido, documento, fecha_fallecimiento, fecha_afiliacion, asociado_origen_id, parentesco, sexo, created_at, updated_at)
+        VALUES ('beneficiario', ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
+        params![ben.0, ben.1, ben.2, ben.3, ben.4, req.fecha_fallecimiento, ben.5, asociado_id, ben.6, ben.7, ahora, ahora],
     ).map_err(|e| e.to_string())?;
 
     conn.execute("DELETE FROM beneficiarios WHERE id=?1", params![beneficiario_id]).map_err(|e| e.to_string())?;

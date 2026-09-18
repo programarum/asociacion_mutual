@@ -20,6 +20,7 @@ pub struct ComprobanteData {
     pub beneficiarios: Vec<ComprobanteBeneficiario>,
     pub pago: ComprobantePago,
     pub configuracion: ComprobanteConfig,
+    pub empresa: ComprobanteEmpresa,
     pub fecha_impresion: String,
 }
 
@@ -62,4 +63,15 @@ pub struct MesCubierto {
 pub struct ComprobanteConfig {
     pub cuota_mensual: f64,
     pub cuota_administracion: f64,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ComprobanteEmpresa {
+    pub nombre: String,
+    pub ruc: String,
+    pub direccion: String,
+    pub telefono1: String,
+    pub telefono2: String,
+    pub whatsapp: String,
+    pub email: String,
 }

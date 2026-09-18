@@ -8,26 +8,44 @@ pub struct CoberturaService;
 impl CoberturaService {
     pub fn get_configuracion(conn: &Connection) -> Result<Configuracion, String> {
         match conn.query_row(
-            "SELECT id, cuota_mensual, cuota_administracion FROM configuracion WHERE id = 1",
+            "SELECT id, cuota_mensual, cuota_administracion,
+                    IFNULL(nombre_empresa, ''), IFNULL(ruc, ''), IFNULL(direccion, ''),
+                    IFNULL(telefono1, ''), IFNULL(telefono2, ''), IFNULL(whatsapp, ''),
+                    IFNULL(email, '')
+             FROM configuracion WHERE id = 1",
             [],
             |row| {
                 Ok(Configuracion {
                     id: row.get(0)?,
                     cuota_mensual: row.get(1)?,
                     cuota_administracion: row.get(2)?,
+                    nombre_empresa: row.get(3)?,
+                    ruc: row.get(4)?,
+                    direccion: row.get(5)?,
+                    telefono1: row.get(6)?,
+                    telefono2: row.get(7)?,
+                    whatsapp: row.get(8)?,
+                    email: row.get(9)?,
                 })
             },
         ) {
             Ok(c) => Ok(c),
             Err(_) => {
                 conn.execute(
-                    "INSERT INTO configuracion (id, cuota_mensual, cuota_administracion) VALUES (1, 0, 0)",
-                    [],
+                    "INSERT INTO configuracion (id, cuota_mensual, cuota_administracion, created_at, updated_at) VALUES (1, 0, 0, ?1, ?1)",
+                    params![super::timestamps::ahora_sql()],
                 ).map_err(|e| e.to_string())?;
                 Ok(Configuracion {
                     id: 1,
                     cuota_mensual: 0.0,
                     cuota_administracion: 0.0,
+                    nombre_empresa: String::new(),
+                    ruc: String::new(),
+                    direccion: String::new(),
+                    telefono1: String::new(),
+                    telefono2: String::new(),
+                    whatsapp: String::new(),
+                    email: String::new(),
                 })
             }
         }
@@ -181,9 +199,11 @@ impl CoberturaService {
             ).unwrap() - chrono::Duration::days(1)
         };
 
+        let ahora = super::timestamps::ahora_sql();
+
         conn.execute(
-            "INSERT INTO pagos (asociado_id, meses_pagados, monto, fecha_pago, mes_desde, mes_hasta)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            "INSERT INTO pagos (asociado_id, meses_pagados, monto, fecha_pago, mes_desde, mes_hasta, created_at, updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
             params![
                 asociado_id,
                 meses,
@@ -191,6 +211,8 @@ impl CoberturaService {
                 hoy.to_string(),
                 mes_desde.to_string(),
                 mes_hasta.to_string(),
+                ahora,
+                ahora,
             ],
         ).map_err(|e| e.to_string())?;
 
@@ -198,14 +220,14 @@ impl CoberturaService {
 
         if cobertura.is_some() {
             conn.execute(
-                "UPDATE coberturas SET mes_pagado_hasta = ?1, estado = 'vigente' WHERE asociado_id = ?2",
-                params![mes_hasta.to_string(), asociado_id],
+                "UPDATE coberturas SET mes_pagado_hasta = ?1, estado = 'vigente', updated_at = ?3 WHERE asociado_id = ?2",
+                params![mes_hasta.to_string(), asociado_id, ahora],
             ).map_err(|e| e.to_string())?;
         } else {
             conn.execute(
-                "INSERT INTO coberturas (asociado_id, fecha_inicio, mes_pagado_hasta, estado)
-                 VALUES (?1, ?2, ?3, 'vigente')",
-                params![asociado_id, hoy.to_string(), mes_hasta.to_string()],
+                "INSERT INTO coberturas (asociado_id, fecha_inicio, mes_pagado_hasta, estado, created_at, updated_at)
+                 VALUES (?1, ?2, ?3, 'vigente', ?4, ?5)",
+                params![asociado_id, hoy.to_string(), mes_hasta.to_string(), ahora, ahora],
             ).map_err(|e| e.to_string())?;
         }
 
@@ -289,10 +311,20 @@ mod tests {
     fn setup_db() -> Connection {
         let conn = Connection::open_in_memory().unwrap();
         conn.execute_batch(
-            "CREATE TABLE configuracion (
+            "            CREATE TABLE configuracion (
                 id INTEGER PRIMARY KEY,
                 cuota_mensual REAL NOT NULL DEFAULT 0,
-                cuota_administracion REAL NOT NULL DEFAULT 0
+                cuota_administracion REAL NOT NULL DEFAULT 0,
+                nombre_empresa TEXT NOT NULL DEFAULT '',
+                ruc TEXT NOT NULL DEFAULT '',
+                direccion TEXT NOT NULL DEFAULT '',
+                telefono TEXT NOT NULL DEFAULT '',
+                telefono1 TEXT NOT NULL DEFAULT '',
+                telefono2 TEXT NOT NULL DEFAULT '',
+                whatsapp TEXT NOT NULL DEFAULT '',
+                email TEXT NOT NULL DEFAULT '',
+                created_at TEXT,
+                updated_at TEXT
             );
             CREATE TABLE coberturas (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,

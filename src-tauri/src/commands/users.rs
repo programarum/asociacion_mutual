@@ -33,7 +33,8 @@ pub fn change_user_role(user_id: i64, role: String, db: State<'_, DbState>, sess
     }
 
     let conn = db.0.lock().map_err(|e| e.to_string())?;
-    conn.execute("UPDATE users SET role = ?1 WHERE id = ?2", params![role, user_id]).map_err(|e| e.to_string())?;
+    let ahora = crate::services::timestamps::ahora_sql();
+    conn.execute("UPDATE users SET role = ?1, updated_at = ?2 WHERE id = ?3", params![role, ahora, user_id]).map_err(|e| e.to_string())?;
 
     conn.query_row("SELECT id, name, email, role, created_at FROM users WHERE id = ?1", [user_id], |row| {
         Ok(User { id: row.get(0)?, name: row.get(1)?, email: row.get(2)?, role: row.get(3)?, created_at: row.get(4)? })

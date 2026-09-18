@@ -89,11 +89,18 @@ mod tests {
 
     #[test]
     fn test_configuracion_serialize_deserialize() {
-        let json = r#"{"id":1,"cuota_mensual":150.50,"cuota_administracion":25.00}"#;
+        let json = r#"{"id":1,"cuota_mensual":150.50,"cuota_administracion":25.00,"nombre_empresa":"Mutual XYZ","ruc":"099","direccion":"Calle 1","telefono1":"555","telefono2":"666","whatsapp":"777","email":"a@b.c"}"#;
         let c: configuracion::Configuracion = serde_json::from_str(json).unwrap();
         assert_eq!(c.id, 1);
         assert!((c.cuota_mensual - 150.50).abs() < f64::EPSILON);
         assert!((c.cuota_administracion - 25.00).abs() < f64::EPSILON);
+        assert_eq!(c.nombre_empresa, "Mutual XYZ");
+        assert_eq!(c.ruc, "099");
+
+        // Compatibilidad: JSON antiguo sin campos de empresa debe deserializar con defaults vacíos.
+        let json_old = r#"{"id":1,"cuota_mensual":10.0,"cuota_administracion":5.0}"#;
+        let c_old: configuracion::Configuracion = serde_json::from_str(json_old).unwrap();
+        assert_eq!(c_old.nombre_empresa, "");
     }
 
     #[test]

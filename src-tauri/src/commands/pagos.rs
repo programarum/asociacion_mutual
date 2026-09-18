@@ -104,6 +104,7 @@ pub fn get_comprobante(asociado_id: i64, pago_id: i64, db: State<'_, DbState>) -
             fecha_pago: pago.3, mes_desde: pago.4, mes_hasta: pago.5, meses_cubiertos,
         },
         configuracion: ComprobanteConfig { cuota_mensual: config.cuota_mensual, cuota_administracion: config.cuota_administracion },
+        empresa: ComprobanteEmpresa { nombre: config.nombre_empresa, ruc: config.ruc, direccion: config.direccion, telefono1: config.telefono1, telefono2: config.telefono2, whatsapp: config.whatsapp, email: config.email },
         fecha_impresion: chrono::Local::now().date_naive().to_string(),
     })
 }

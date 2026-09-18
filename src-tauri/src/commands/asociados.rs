@@ -119,13 +119,16 @@ pub fn create_asociado(
 ) -> Result<Asociado, String> {
     let conn = db.0.lock().map_err(|e| e.to_string())?;
 
+    let ahora = crate::services::timestamps::ahora_sql();
+
     conn.execute(
         "INSERT INTO asociados (codigo, primer_nombre, segundo_nombre, primer_apellido, segundo_apellido,
-        documento, email, telefono, direccion, mes_actual)
-        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+        documento, email, telefono, direccion, mes_actual, created_at, updated_at)
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
         params![
             codigo, primer_nombre, segundo_nombre, primer_apellido, segundo_apellido,
             documento, email, telefono, direccion, chrono::Local::now().date_naive().to_string(),
+            ahora, ahora,
         ],
     ).map_err(|e| e.to_string())?;
 
@@ -159,6 +162,9 @@ pub fn update_asociado(
     if let Some(v) = email { conn.execute("UPDATE asociados SET email = ?1 WHERE id = ?2", params![v, id]).map_err(|e| e.to_string())?; }
     if let Some(v) = telefono { conn.execute("UPDATE asociados SET telefono = ?1 WHERE id = ?2", params![v, id]).map_err(|e| e.to_string())?; }
     if let Some(v) = direccion { conn.execute("UPDATE asociados SET direccion = ?1 WHERE id = ?2", params![v, id]).map_err(|e| e.to_string())?; }
+
+    let ahora = crate::services::timestamps::ahora_sql();
+    conn.execute("UPDATE asociados SET updated_at = ?1 WHERE id = ?2", params![ahora, id]).map_err(|e| e.to_string())?;
 
     drop(conn);
     get_asociado(id, db)
@@ -212,11 +218,13 @@ pub fn transfer_and_delete(
         },
     ).map_err(|_| "El beneficiario no pertenece a este asociado".to_string())?;
 
+    let ahora = crate::services::timestamps::ahora_sql();
+
     tx.execute(
         "INSERT INTO asociados (codigo, primer_nombre, segundo_nombre, primer_apellido, segundo_apellido,
-        documento, email, telefono, direccion, mes_actual, mese_pagados, gran_total)
-        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
-        params![asociado.0, ben.0, ben.1, ben.2, ben.3, ben.4, asociado.1, asociado.2, asociado.3, asociado.4, asociado.5, asociado.6],
+        documento, email, telefono, direccion, mes_actual, mese_pagados, gran_total, created_at, updated_at)
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
+        params![asociado.0, ben.0, ben.1, ben.2, ben.3, ben.4, asociado.1, asociado.2, asociado.3, asociado.4, asociado.5, asociado.6, ahora, ahora],
     ).map_err(|e| e.to_string())?;
 
     let nuevo_id = tx.last_insert_rowid();
