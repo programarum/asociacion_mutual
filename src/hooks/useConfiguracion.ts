@@ -5,6 +5,13 @@ export interface Configuracion {
   id: number;
   cuota_mensual: number;
   cuota_administracion: number;
+  nombre_empresa: string;
+  ruc: string;
+  direccion: string;
+  telefono1: string;
+  telefono2: string;
+  whatsapp: string;
+  email: string;
 }
 
 export function useConfiguracion() {
@@ -16,9 +23,16 @@ export function useConfiguracion() {
   });
 }
 
-interface ConfiguracionInput {
+export interface ConfiguracionInput {
   cuota_mensual: number;
   cuota_administracion: number;
+  nombre_empresa: string;
+  ruc: string;
+  direccion: string;
+  telefono1: string;
+  telefono2: string;
+  whatsapp: string;
+  email: string;
 }
 
 export function useUpdateConfiguracion() {

@@ -8,7 +8,7 @@ interface UserData {
   name: string;
   email: string;
   role: string;
-  created_at: string;
+  created_at: string | null;
 }
 
 
@@ -157,9 +157,12 @@ export default function UsuariosPage() {
     setRegisterLoading(false);
   };
 
-  const formatDate = (dateStr: string) => {
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return "—";
     try {
-      return new Date(dateStr).toLocaleDateString("es-CO", {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString("es-CO", {
         year: "numeric",
         month: "short",
         day: "numeric",

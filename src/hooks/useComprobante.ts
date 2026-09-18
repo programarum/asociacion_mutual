@@ -14,6 +14,16 @@ export interface ComprobanteBeneficiario {
   documento: string;
 }
 
+export interface ComprobanteEmpresa {
+  nombre: string;
+  ruc: string;
+  direccion: string;
+  telefono1: string;
+  telefono2: string;
+  whatsapp: string;
+  email: string;
+}
+
 export interface ComprobanteData {
   recibo_numero: number;
   asociado: {
@@ -37,6 +47,7 @@ export interface ComprobanteData {
     cuota_mensual: number;
     cuota_administracion: number;
   };
+  empresa: ComprobanteEmpresa;
   fecha_impresion: string;
 }
 

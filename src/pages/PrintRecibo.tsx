@@ -44,10 +44,11 @@ export default function PrintRecibo() {
       <style>{`
         @media print {
           @page {
-            /* Papel precortado 13.97 × 21.59 cm (≈ 14 × 21.5 cm) */
-            size: 140mm 215.9mm;
-            /* Márgenes mínimos: sup/izq/der 5mm · inferior 10mm (rango 5-12mm) */
-            margin: 5mm 5mm 10mm 5mm;
+            size: Letter portrait;
+            margin: 0;
+          }
+          body {
+            margin: 0;
           }
         }
       `}</style>
@@ -60,7 +61,10 @@ export default function PrintRecibo() {
               Recibo de Pago
             </h1>
             <p className="text-xs text-gray-500">
-              Se imprimirá únicamente el recibo.
+              Hoja tamaño carta. Si el recibo no llena la hoja, se imprime
+              solo en la mitad superior. En el diálogo de impresión use
+              papel <strong>Carta</strong>, márgenes <strong>Ninguno</strong>{" "}
+              y escala <strong>100%</strong> (no "Ajustar a página").
             </p>
           </div>
           <div className="flex gap-2">
@@ -85,8 +89,8 @@ export default function PrintRecibo() {
 
       {/* Contenido del recibo */}
       <div
-        className="mx-auto py-6 print:py-0"
-        style={{ width: "110mm" }}
+        className="mx-auto py-6 print:py-0 overflow-x-auto print:overflow-visible"
+        style={{ maxWidth: "215.9mm" }}
       >
         {isLoading ? (
           <div className="py-16 text-center flex items-center justify-center gap-2">

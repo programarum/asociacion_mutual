@@ -11,6 +11,13 @@ export default function SettingPage() {
 
   const [cuota, setCuota] = useState("");
   const [cuotaAdmin, setCuotaAdmin] = useState("");
+  const [nombreEmpresa, setNombreEmpresa] = useState("");
+  const [ruc, setRuc] = useState("");
+  const [direccion, setDireccion] = useState("");
+  const [telefono1, setTelefono1] = useState("");
+  const [telefono2, setTelefono2] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [email, setEmail] = useState("");
   const [message, setMessage] = useState<{
     text: string;
     type: "success" | "error";
@@ -20,6 +27,13 @@ export default function SettingPage() {
     if (data) {
       setCuota(String(data.cuota_mensual));
       setCuotaAdmin(String(data.cuota_administracion));
+      setNombreEmpresa(data.nombre_empresa ?? "");
+      setRuc(data.ruc ?? "");
+      setDireccion(data.direccion ?? "");
+      setTelefono1(data.telefono1 ?? "");
+      setTelefono2(data.telefono2 ?? "");
+      setWhatsapp(data.whatsapp ?? "");
+      setEmail(data.email ?? "");
     }
   }, [data]);
 
@@ -51,6 +65,13 @@ export default function SettingPage() {
       await updateMutation.mutateAsync({
         cuota_mensual: valorCuota,
         cuota_administracion: valorAdmin,
+        nombre_empresa: nombreEmpresa.trim(),
+        ruc: ruc.trim(),
+        direccion: direccion.trim(),
+        telefono1: telefono1.trim(),
+        telefono2: telefono2.trim(),
+        whatsapp: whatsapp.trim(),
+        email: email.trim(),
       });
       setMessage({
         text: "Configuración actualizada exitosamente",
@@ -91,7 +112,7 @@ export default function SettingPage() {
             <p className="text-gray-500">Cargando configuración...</p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow-md p-6 max-w-lg">
+          <div className="bg-white rounded-lg shadow-md p-6 max-w-2xl">
             <h3 className="text-lg font-bold text-gray-800 mb-4">
               Cuotas del Sistema
             </h3>
@@ -144,6 +165,108 @@ export default function SettingPage() {
                   onChange={(e) => setCuotaAdmin(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 text-black py-2 outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="0.00"
+                />
+              </div>
+
+              <div className="pt-2 border-t border-gray-200">
+                <h4 className="text-sm font-bold text-gray-800 mb-1">
+                  Datos de la empresa
+                </h4>
+                <p className="text-xs text-gray-500 mb-3">
+                  Aparecen en el encabezado del recibo.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nombre / Razón social
+                </label>
+                <input
+                  type="text"
+                  value={nombreEmpresa}
+                  onChange={(e) => setNombreEmpresa(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 text-black py-2 outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Nombre de la asociación"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    RUC / Identificación
+                  </label>
+                  <input
+                    type="text"
+                    value={ruc}
+                    onChange={(e) => setRuc(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 text-black py-2 outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="0000000000"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    WhatsApp
+                  </label>
+                  <input
+                    type="text"
+                    value={whatsapp}
+                    onChange={(e) => setWhatsapp(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 text-black py-2 outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="0999-999-999"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Teléfono 1
+                  </label>
+                  <input
+                    type="text"
+                    value={telefono1}
+                    onChange={(e) => setTelefono1(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 text-black py-2 outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="000-0000"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Teléfono 2
+                  </label>
+                  <input
+                    type="text"
+                    value={telefono2}
+                    onChange={(e) => setTelefono2(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 text-black py-2 outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="000-0000"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Dirección
+                </label>
+                <input
+                  type="text"
+                  value={direccion}
+                  onChange={(e) => setDireccion(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 text-black py-2 outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Calle principal ..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 text-black py-2 outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="contacto@empresa.com"
                 />
               </div>
 
