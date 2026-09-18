@@ -49,3 +49,6 @@ tools/.private_key
 
 # Tauri updater signing private key (NUNCA commitear)
 .tauri/
+
+# copia suelta de la BD (la semilla vive en src-tauri/resources/)
+/mutual.sqlite

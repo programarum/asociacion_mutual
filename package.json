@@ -14,7 +14,8 @@
     "test:coverage": "pnpm exec vitest run --coverage",
     "test:watch": "pnpm exec vitest",
     "test:rust": "cd src-tauri && cargo test",
-    "test:all": "pnpm run test:run && pnpm run test:rust"
+    "test:all": "pnpm run test:run && pnpm run test:rust",
+    "db:sync-seed": "bash scripts/db-sync-seed.sh"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.0",

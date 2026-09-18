@@ -14,6 +14,7 @@
 - Tests: `pnpm test` (Vitest), `pnpm test:rust` (cargo test), `pnpm test:all`
 - Lint: `pnpm lint`
 - Typecheck: `pnpm typecheck`
+- Sync semilla: `pnpm db:sync-seed` (copia la BD de dev de app_data_dir a `src-tauri/resources/mutual.sqlite`; commitear y pushear para que el build la incluya)
 
 ## Estructura clave
 
