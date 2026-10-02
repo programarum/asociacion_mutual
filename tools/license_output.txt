@@ -2,8 +2,8 @@
 LICENCIA GENERADA
 ============================================================
 
-Machine ID: fcdffe3898566e2724189dccb6ed38c7d7cd16b38918b99842754f714e26191c
-License Key: c7cb594b57718eee40787fc17ddb7defeaa5987a01a6a80fd0e6a6c16affc4028cb4c4dacd0243df7b4461290e0e23113e2ba38441e55071f1a5d5959c1e780f
+Machine ID: 7cd9b4c51c0d3b98d4ccd9b33e8d19524fba653bb6b29d652b44b70ce589d849
+License Key: 366c84ff04f1f0cba6d0704474d66294092e995ac61f2b38d1df32e5ad13963cf5e84308ea0633beaf1cb22ff9bf2e6e837627f07be9158ec768ace32a289402
 
 Entregar esta License Key al usuario para activar la app.
 ============================================================
