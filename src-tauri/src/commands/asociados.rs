@@ -149,6 +149,9 @@ pub fn update_asociado(
     email: Option<String>,
     telefono: Option<String>,
     direccion: Option<String>,
+    mes_actual: Option<String>,
+    mese_pagados: Option<String>,
+    gran_total: Option<String>,
     db: State<'_, DbState>,
 ) -> Result<Asociado, String> {
     let conn = db.0.lock().map_err(|e| e.to_string())?;
@@ -162,6 +165,9 @@ pub fn update_asociado(
     if let Some(v) = email { conn.execute("UPDATE asociados SET email = ?1 WHERE id = ?2", params![v, id]).map_err(|e| e.to_string())?; }
     if let Some(v) = telefono { conn.execute("UPDATE asociados SET telefono = ?1 WHERE id = ?2", params![v, id]).map_err(|e| e.to_string())?; }
     if let Some(v) = direccion { conn.execute("UPDATE asociados SET direccion = ?1 WHERE id = ?2", params![v, id]).map_err(|e| e.to_string())?; }
+    if let Some(v) = mes_actual { conn.execute("UPDATE asociados SET mes_actual = ?1 WHERE id = ?2", params![v, id]).map_err(|e| e.to_string())?; }
+    if let Some(v) = mese_pagados { conn.execute("UPDATE asociados SET mese_pagados = ?1 WHERE id = ?2", params![v, id]).map_err(|e| e.to_string())?; }
+    if let Some(v) = gran_total { conn.execute("UPDATE asociados SET gran_total = ?1 WHERE id = ?2", params![v, id]).map_err(|e| e.to_string())?; }
 
     let ahora = crate::services::timestamps::ahora_sql();
     conn.execute("UPDATE asociados SET updated_at = ?1 WHERE id = ?2", params![ahora, id]).map_err(|e| e.to_string())?;

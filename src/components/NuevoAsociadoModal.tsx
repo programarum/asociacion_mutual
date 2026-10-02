@@ -61,10 +61,10 @@ export default function NuevoAsociadoModal({
     try {
       await invoke("create_asociado", {
         codigo: form.codigo,
-        primer_nombre: form.primer_nombre,
-        segundo_nombre: form.segundo_nombre || null,
-        primer_apellido: form.primer_apellido,
-        segundo_apellido: form.segundo_apellido || null,
+        primerNombre: form.primer_nombre,
+        segundoNombre: form.segundo_nombre || null,
+        primerApellido: form.primer_apellido,
+        segundoApellido: form.segundo_apellido || null,
         documento: form.documento,
         email: form.email,
         telefono: form.telefono,

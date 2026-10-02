@@ -79,17 +79,17 @@ export default function EditAsociadoModal({
       await invoke("update_asociado", {
         id: asociado.id,
         codigo: form.codigo,
-        primer_nombre: form.primer_nombre,
-        segundo_nombre: form.segundo_nombre || null,
-        primer_apellido: form.primer_apellido,
-        segundo_apellido: form.segundo_apellido || null,
+        primerNombre: form.primer_nombre,
+        segundoNombre: form.segundo_nombre || null,
+        primerApellido: form.primer_apellido,
+        segundoApellido: form.segundo_apellido || null,
         documento: form.documento,
         email: form.email,
         telefono: form.telefono,
         direccion: form.direccion,
-        mes_actual: form.mes_actual || null,
-        mese_pagados: form.mese_pagados || null,
-        gran_total: form.gran_total || null,
+        mesActual: form.mes_actual || null,
+        mesePagados: form.mese_pagados || null,
+        granTotal: form.gran_total || null,
       });
       onUpdated();
       onClose();
