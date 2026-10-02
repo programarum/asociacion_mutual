@@ -8,18 +8,10 @@ export const EPS = 1;
 
 export type ModoHoja = "auto" | "media" | "entera" | "overflow";
 
-export function decidirDisposicion(
-  bodyH: number,
-  pieH: number
-): { mode: ModoHoja; spacer: number } {
-  const need = bodyH + pieH;
+export function decidirDisposicion(bodyH: number): ModoHoja {
   const mediaAvail = HALF_H - PAD_Y * 2 - EPS;
   const enteraAvail = PAGE_H - PAD_Y * 2 - EPS;
-  if (need <= mediaAvail) {
-    return { mode: "media", spacer: mediaAvail - need };
-  }
-  if (need <= enteraAvail) {
-    return { mode: "entera", spacer: enteraAvail - need };
-  }
-  return { mode: "overflow", spacer: 0 };
+  if (bodyH <= mediaAvail) return "media";
+  if (bodyH <= enteraAvail) return "entera";
+  return "overflow";
 }

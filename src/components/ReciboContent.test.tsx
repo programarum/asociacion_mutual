@@ -41,20 +41,15 @@ const base: ComprobanteData = {
 
 describe("decidirDisposicion", () => {
   it("usa media hoja cuando el contenido cabe arriba", () => {
-    const { mode, spacer } = decidirDisposicion(70, 26);
-    expect(mode).toBe("media");
-    expect(spacer).toBeGreaterThan(0);
+    expect(decidirDisposicion(70)).toBe("media");
   });
 
   it("usa hoja completa cuando no cabe en la mitad", () => {
-    const { mode } = decidirDisposicion(150, 26);
-    expect(mode).toBe("entera");
+    expect(decidirDisposicion(150)).toBe("entera");
   });
 
   it("desborda a más hojas cuando no cabe en una carta completa", () => {
-    const { mode, spacer } = decidirDisposicion(250, 26);
-    expect(mode).toBe("overflow");
-    expect(spacer).toBe(0);
+    expect(decidirDisposicion(280)).toBe("overflow");
   });
 });
 

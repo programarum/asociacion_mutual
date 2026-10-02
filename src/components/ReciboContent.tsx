@@ -11,7 +11,6 @@ import {
   type ModoHoja,
 } from "./reciboLayout";
 import logoImg from "../assets/recibos/logo.png";
-import pieImg from "../assets/recibos/logo_pie.png";
 
 interface ReciboContentProps {
   data: ComprobanteData;
@@ -19,27 +18,20 @@ interface ReciboContentProps {
 
 export default function ReciboContent({ data }: ReciboContentProps) {
   const bodyRef = useRef<HTMLDivElement>(null);
-  const pieRef = useRef<HTMLDivElement>(null);
   const [mode, setMode] = useState<ModoHoja>("auto");
-  const [spacer, setSpacer] = useState(0);
 
   useLayoutEffect(() => {
     const bodyEl = bodyRef.current;
-    const pieEl = pieRef.current;
-    if (!bodyEl || !pieEl) return;
+    if (!bodyEl) return;
 
     const measure = () => {
       const bodyH = bodyEl.getBoundingClientRect().height / MM;
-      const pieH = pieEl.getBoundingClientRect().height / MM;
-      const { mode: m, spacer: s } = decidirDisposicion(bodyH, pieH);
-      setMode(m);
-      setSpacer(s);
+      setMode(decidirDisposicion(bodyH));
     };
 
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(bodyEl);
-    ro.observe(pieEl);
     window.addEventListener("load", measure);
     return () => {
       ro.disconnect();
@@ -86,39 +78,50 @@ export default function ReciboContent({ data }: ReciboContentProps) {
           margin: 4px 0;
         }
 
-        /* Encabezado: logo + datos empresa */
+        /* Encabezado: logo a la izquierda, nombre centrado, datos a lo ancho */
         .recibo-header {
-          display: flex;
-          align-items: center;
-          gap: 12px;
+          position: relative;
           border-bottom: 2px solid #1e3a8a;
           padding-bottom: 4px;
+          padding-top: 1px;
           margin-bottom: 6px;
+          min-height: 26mm;
         }
         .recibo-logo {
-          width: 18mm;
-          height: 18mm;
+          position: absolute;
+          left: 0;
+          top: 1px;
+          width: 25mm;
+          height: 25mm;
           object-fit: contain;
-          flex: none;
-        }
-        .recibo-empresa {
-          flex: 1;
-          min-width: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 0;
         }
         .empresa-nombre {
+          text-align: center;
+          padding: 0 26mm;
           font-size: 15px;
           font-weight: 700;
           text-transform: uppercase;
           color: #1e3a8a;
-          line-height: 1.15;
+          line-height: 1.2;
         }
+        .empresa-datos {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 14px;
+          padding-left: 26mm;
+          margin-top: 3px;
+        }
+        .datos-col {
+          display: flex;
+          flex-direction: column;
+        }
+        .datos-col:last-child { text-align: right; }
         .empresa-dato {
-          font-size: 10px;
+          font-size: 9.5px;
           line-height: 1.3;
           color: #222;
+          white-space: nowrap;
         }
 
         .recibo-titulo {
@@ -169,16 +172,16 @@ export default function ReciboContent({ data }: ReciboContentProps) {
         .recibo-valor {
           border: 1px solid #555;
           border-radius: 4px;
-          padding: 6px 8px;
-          margin-top: 8px;
+          padding: 4px 8px;
+          margin-top: 6px;
         }
         .recibo-valor-top {
           display: flex;
           justify-content: space-between;
           align-items: baseline;
         }
-        .recibo-valor-monto { font-size: 16px; font-weight: 700; }
-        .recibo-valor-letras { font-size: 10px; font-style: italic; margin-top: 2px; }
+        .recibo-valor-monto { font-size: 14px; font-weight: 700; }
+        .recibo-valor-letras { font-size: 9px; font-style: italic; margin-top: 1px; }
         .recibo-firmas {
           display: flex;
           justify-content: space-between;
@@ -194,18 +197,6 @@ export default function ReciboContent({ data }: ReciboContentProps) {
           margin-bottom: 3px;
         }
         .recibo-firma p { font-size: 10px; }
-
-        /* Pie */
-        .recibo-pie {
-          flex: none;
-          display: flex;
-          justify-content: center;
-        }
-        .recibo-pie-img {
-          display: block;
-          width: 80%;
-          height: auto;
-        }
 
         /* Linea de corte (solo pantalla) */
         .recibo-corte {
@@ -238,28 +229,34 @@ export default function ReciboContent({ data }: ReciboContentProps) {
           {/* Encabezado */}
           <div className="recibo-header">
             <img src={logoImg} alt="Logo" className="recibo-logo" />
-            <div className="recibo-empresa">
-              <p className="empresa-nombre">{nombreEmpresa}</p>
-              {empresa?.ruc ? (
-                <p className="empresa-dato">NIT: {empresa.ruc}</p>
-              ) : null}
-              {empresa?.direccion ? (
-                <p className="empresa-dato">Dir.: {empresa.direccion}</p>
-              ) : null}
-              {empresa?.telefono1 || empresa?.telefono2 ? (
-                <p className="empresa-dato">
-                  Tel.:{" "}
-                  {[empresa?.telefono1, empresa?.telefono2]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </p>
-              ) : null}
-              {empresa?.whatsapp ? (
-                <p className="empresa-dato">WhatsApp: {empresa.whatsapp}</p>
-              ) : null}
-              {empresa?.email ? (
-                <p className="empresa-dato">Email: {empresa.email}</p>
-              ) : null}
+            <p className="empresa-nombre">{nombreEmpresa}</p>
+            <div className="empresa-datos">
+              <div className="datos-col">
+                {empresa?.ruc ? (
+                  <span className="empresa-dato">NIT: {empresa.ruc}</span>
+                ) : null}
+                {empresa?.direccion ? (
+                  <span className="empresa-dato">Dir.: {empresa.direccion}</span>
+                ) : null}
+              </div>
+              <div className="datos-col">
+                {empresa?.telefono1 || empresa?.telefono2 ? (
+                  <span className="empresa-dato">
+                    Tel.:{" "}
+                    {[empresa?.telefono1, empresa?.telefono2]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </span>
+                ) : null}
+                {empresa?.whatsapp ? (
+                  <span className="empresa-dato">
+                    WhatsApp: {empresa.whatsapp}
+                  </span>
+                ) : null}
+                {empresa?.email ? (
+                  <span className="empresa-dato">Email: {empresa.email}</span>
+                ) : null}
+              </div>
             </div>
           </div>
 
@@ -361,15 +358,6 @@ export default function ReciboContent({ data }: ReciboContentProps) {
               <p>Sello y Firma Administración</p>
             </div>
           </div>
-        </div>
-
-        {/* Pie de página */}
-        <div
-          ref={pieRef}
-          className="recibo-pie"
-          style={{ marginTop: `${spacer}mm` }}
-        >
-          <img src={pieImg} alt="Pie de página" className="recibo-pie-img" />
         </div>
       </div>
 
